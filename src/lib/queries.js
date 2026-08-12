@@ -77,7 +77,9 @@ export async function searchProducts(query, { limit = 30 } = {}) {
   const { data, error } = await supabase
     .from('products_with_meta')
     .select('*')
-    .textSearch('search_vector', query, { type: 'websearch', config: 'simple' })
+    .or(
+      `name.ilike.%${query}%,variant.ilike.%${query}%,short_desc.ilike.%${query}%`
+    )
     .limit(limit)
   if (error) throw error
   return data || []
@@ -85,10 +87,11 @@ export async function searchProducts(query, { limit = 30 } = {}) {
 
 /**
  * Create an order + order items. Returns the order_number.
- * Caller provides: customer info, items [{ product_id, quantity }]
+ * Caller provides: customer info, items [{ product_id, quantity }], delivery method.
  * Prices are snapshotted from the DB at insert time (don't trust client prices).
+ * Payment is COD only. Shipping is free for pickup, 60 BDT for home delivery.
  */
-export async function createOrder({ customer, items, paymentMethod, paymentRef }) {
+export async function createOrder({ customer, items, deliveryMethod = 'home' }) {
   if (!items?.length) throw new Error('No items in order')
 
   // Fetch current prices to snapshot
@@ -118,28 +121,32 @@ export async function createOrder({ customer, items, paymentMethod, paymentRef }
     }
   })
 
-  const shipping = 60
+  const shipping = deliveryMethod === 'pickup' ? 0 : 60
   const total = subtotal + shipping
   const orderNumber = await generateOrderNumber()
 
+  const orderRow = {
+    order_number: orderNumber,
+    customer_name: customer.name,
+    customer_phone: customer.phone,
+    customer_email: customer.email || null,
+    shipping_address: customer.address,
+    shipping_city: customer.city,
+    shipping_thana: customer.thana || null,
+    shipping_postcode: customer.postcode || null,
+    shipping_notes: customer.notes || null,
+    subtotal_bdt: subtotal,
+    shipping_bdt: shipping,
+    total_bdt: total,
+    payment_method: 'cod',
+    payment_status: 'pending',
+    payment_ref: null,
+    delivery_method: deliveryMethod,
+  }
+
   const { data: order, error: orderError } = await supabase
     .from('orders')
-    .insert({
-      order_number: orderNumber,
-      customer_name: customer.name,
-      customer_phone: customer.phone,
-      customer_email: customer.email || null,
-      shipping_address: customer.address,
-      shipping_city: customer.city,
-      shipping_thana: customer.thana || null,
-      shipping_postcode: customer.postcode || null,
-      shipping_notes: customer.notes || null,
-      subtotal_bdt: subtotal,
-      shipping_bdt: shipping,
-      total_bdt: total,
-      payment_method: paymentMethod,
-      payment_ref: paymentRef || null,
-    })
+    .insert(orderRow)
     .select()
     .single()
   if (orderError) throw orderError

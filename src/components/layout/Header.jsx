@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { Menu, X, Search, ShoppingCart, Smartphone, ChevronDown } from 'lucide-react'
 import { fetchBrands } from '../../lib/queries'
+import { useCart } from '../../lib/cart'
 
 const FALLBACK_BRANDS = [
   { name: 'Apple', slug: 'apple' }, { name: 'Samsung', slug: 'samsung' },
@@ -13,6 +14,7 @@ const FALLBACK_BRANDS = [
 
 export function Header() {
   const navigate = useNavigate()
+  const { itemCount } = useCart()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [brandsOpen, setBrandsOpen] = useState(false)
   const [brands, setBrands] = useState(FALLBACK_BRANDS)
@@ -99,10 +101,12 @@ export function Header() {
                 <Search className="w-5 h-5" />
               </button>
             )}
-            <button className="btn-ghost p-2 relative" aria-label="Cart">
+            <Link to="/cart" className="btn-ghost p-2 relative" aria-label="Cart">
               <ShoppingCart className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-white text-[10px] font-bold rounded-full flex items-center justify-center">0</span>
-            </button>
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-neon-green text-black text-[10px] font-bold rounded-full flex items-center justify-center">{itemCount}</span>
+              )}
+            </Link>
             <button onClick={() => setMobileOpen(!mobileOpen)} className="btn-ghost p-2 lg:hidden" aria-label="Menu">
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>

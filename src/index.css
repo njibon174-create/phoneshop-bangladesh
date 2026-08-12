@@ -107,6 +107,9 @@
   .gradient-card {
     background: linear-gradient(135deg, #111827, #1E2A3A);
   }
+  .input {
+    @apply w-full bg-elev-bg border border-border rounded-lg px-3 py-2.5 text-sm text-main-text placeholder:text-muted-text focus:outline-none focus:border-neon-green focus:ring-1 focus:ring-neon-green/30 transition-colors;
+  }
 }
 
 @layer utilities {

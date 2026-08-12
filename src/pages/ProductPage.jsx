@@ -169,13 +169,7 @@ export function ProductPage() {
 
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
-              <button
-                disabled={product.stock_status === 'out_of_stock'}
-                className="btn-primary flex-1 text-base py-3.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ShoppingCart className="w-5 h-5" />
-                {product.stock_status === 'out_of_stock' ? 'Out of Stock' : 'Buy Now'}
-              </button>
+              <AddToCartButton product={product} />
               <button className="btn-secondary py-3.5 px-5 flex items-center justify-center gap-2">
                 <Heart className="w-5 h-5" />
                 <span className="hidden sm:inline">Wishlist</span>
@@ -300,5 +294,51 @@ function ErrorPage({ message, onBack }) {
         <Link to="/" className="btn-primary">Home</Link>
       </div>
     </main>
+  )
+}
+
+
+function AddToCartButton({ product }) {
+  const { add } = useCart()
+  const [added, setAdded] = useState(false)
+  const navigate = useNavigate()
+  const isOut = product.stock_status === 'out_of_stock'
+
+  function handleAdd() {
+    if (isOut) return
+    add({
+      id: product.id,
+      slug: product.slug,
+      name: product.name,
+      variant: product.variant,
+      brand: product.brand_name,
+      image: product.primary_image_url,
+      unit_price_bdt: product.price_bdt,
+    }, 1)
+    setAdded(true)
+    setTimeout(() => setAdded(false), 1500)
+  }
+
+  return (
+    <div className="flex-1 flex gap-2">
+      <button
+        onClick={handleAdd}
+        disabled={isOut}
+        className="btn-primary flex-1 text-base py-3.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {added ? (
+          <><CheckCircle2 className="w-5 h-5" /> Added!</>
+        ) : (
+          <><ShoppingCart className="w-5 h-5" /> {isOut ? 'Out of Stock' : 'Add to Cart'}</>
+        )}
+      </button>
+      <button
+        onClick={() => { handleAdd(); setTimeout(() => navigate('/cart'), 200) }}
+        disabled={isOut}
+        className="btn-secondary py-3.5 px-5 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Buy Now
+      </button>
+    </div>
   )
 }
