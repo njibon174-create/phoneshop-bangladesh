@@ -22,7 +22,9 @@ export function BrandPage() {
   const { products, loading, error, totalCount, filters, setFilter, clearAll } = useProductFilters()
   useEffect(() => {
     setFilter('brand', slug)
-    return () => setFilter('brand', '')
+    // No cleanup — the cleanup was causing navigation issues
+    // When navigating to /product/..., the old setParams ref would
+    // incorrectly replace the URL with the brand page URL
   }, [slug, setFilter])
 
   useEffect(() => {
