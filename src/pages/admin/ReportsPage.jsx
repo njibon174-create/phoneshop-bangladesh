@@ -201,7 +201,7 @@ function ComparisonRow({ label, current, previous, isCurrency = true, invertColo
 
 // ─── Main Reports Page ────────────────────────────────────────────────────────
 
-export default function Reports() {
+export default function ReportsPage() {
   const now = new Date()
   const [selectedYear, setSelectedYear] = useState(now.getFullYear())
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth())

@@ -62,7 +62,7 @@ function SkeletonCard() {
   )
 }
 
-export default function SalesList() {
+export default function SalesPage() {
   const [sales, setSales] = useState([])
   const [loading, setLoading] = useState(true)
   const [paymentFilter, setPaymentFilter] = useState('all')

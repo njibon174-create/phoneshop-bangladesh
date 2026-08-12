@@ -332,7 +332,7 @@ function TransactionForm({ tx, onSuccess, onCancel }) {
   )
 }
 
-export default function CashBook() {
+export default function CashBookPage() {
   const [transactions, setTransactions] = useState([])
   const [editHistory, setEditHistory] = useState({}) // keyed by transaction_id
   const [loading, setLoading] = useState(true)

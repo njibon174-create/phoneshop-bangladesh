@@ -72,7 +72,7 @@ function SkeletonCard() {
   )
 }
 
-export default function InventoryList() {
+export default function InventoryPage() {
   const [phones, setPhones] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')

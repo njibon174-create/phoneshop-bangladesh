@@ -174,7 +174,7 @@ function CreditCard({ credit, onAddPayment }) {
   )
 }
 
-export default function BakiLedger() {
+export default function BakiLedgerPage() {
   const [credits, setCredits] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
