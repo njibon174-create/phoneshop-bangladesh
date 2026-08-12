@@ -75,7 +75,7 @@ Tables:
 - [x] Step 1: Project foundation + dark design system + homepage skeleton
 - [x] Step 2: Supabase schema (brands, products, inventory, images, orders)
 - [x] Step 3: Product listing pages + filtering + search
-- [ ] Step 4: Product detail page
+- [x] Step 4: Product detail page (image gallery, full specs, related phones)
 - [ ] Step 5: Cart + order flow (COD + bKash/Nagad)
 - [ ] Step 6: Admin panel
 - [ ] Step 7: Performance + SEO

@@ -5,6 +5,7 @@ import { Home } from './pages/Home'
 import { BrandPage } from './pages/BrandPage'
 import { BrandsPage } from './pages/BrandsPage'
 import { SearchPage } from './pages/SearchPage'
+import { ProductPage } from './pages/ProductPage'
 
 export default function App() {
   return (
@@ -16,9 +17,8 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/brands" element={<BrandsPage />} />
             <Route path="/brand/:slug" element={<BrandPage />} />
+            <Route path="/product/:slug" element={<ProductPage />} />
             <Route path="/search" element={<SearchPage />} />
-            {/* TODO Step 4: /product/:slug */}
-            {/* TODO Step 5: /cart, /checkout */}
           </Routes>
         </main>
         <Footer />
