@@ -20,46 +20,26 @@ import { AboutPage } from './pages/AboutPage'
 import { WarrantyPage, ReturnsPage, PrivacyPage, TermsPage, CareersPage } from './pages/legal'
 import { DeliveryPage } from './pages/delivery'
 import { CartProvider } from './lib/cart'
+import { AdminProvider, useAdmin } from './lib/admin/auth'
+import { AdminLogin } from './pages/admin/AdminLogin'
+import { AdminDashboard } from './pages/admin/AdminDashboard'
+import { AdminProducts } from './pages/admin/AdminProducts'
+import { AdminProductEdit } from './pages/admin/AdminProductEdit'
+import { AdminBrands } from './pages/admin/AdminBrands'
+import { AdminInventory } from './pages/admin/AdminInventory'
+import { AdminOrders } from './pages/admin/AdminOrders'
+import { AdminSales } from './pages/admin/AdminSales'
+import { AdminDues } from './pages/admin/AdminDues'
+import { AdminCashflow } from './pages/admin/AdminCashflow'
+import { AdminReports } from './pages/admin/AdminReports'
+import { AdminSettings } from './pages/admin/AdminSettings'
 
-export default function App() {
-  return (
-    <BrowserRouter>
-      <CartProvider>
-        <div className="min-h-screen bg-background flex flex-col">
-          <Header />
-          <main className="flex-1">
-            <ErrorBoundary>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/brands" element={<BrandsPage />} />
-                <Route path="/brand/:slug" element={<BrandPage />} />
-                <Route path="/product/:slug" element={<ProductPage />} />
-                <Route path="/search" element={<SearchPage />} />
-                <Route path="/cart" element={<CartPage />} />
-                <Route path="/checkout" element={<CheckoutPage />} />
-                <Route path="/order-confirmed" element={<OrderConfirmationPage />} />
-                <Route path="/track" element={<OrderTrackingPage />} />
-                <Route path="/wishlist" element={<WishlistPage />} />
-                <Route path="/compare" element={<ComparePage />} />
-                <Route path="/deals" element={<DealsPage />} />
-                <Route path="/new" element={<NewArrivalsPage />} />
-                <Route path="/support" element={<SupportPage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/delivery" element={<DeliveryPage />} />
-                <Route path="/warranty" element={<WarrantyPage />} />
-                <Route path="/returns" element={<ReturnsPage />} />
-                <Route path="/privacy" element={<PrivacyPage />} />
-                <Route path="/terms" element={<TermsPage />} />
-                <Route path="/careers" element={<CareersPage />} />
-                <Route path="*" element={<NotFoundPage />} />
-              </Routes>
-            </ErrorBoundary>
-          </main>
-          <Footer />
-        </div>
-      </CartProvider>
-    </BrowserRouter>
-  )
+function AdminGuard({ children }) {
+  const { authenticated } = useAdmin()
+  if (!authenticated) {
+    return <AdminLogin />
+  }
+  return <ErrorBoundary>{children}</ErrorBoundary>
 }
 
 function NotFoundPage() {
@@ -70,5 +50,68 @@ function NotFoundPage() {
       <p className="text-sec-text mb-6">The page you're looking for doesn't exist.</p>
       <a href="/" className="btn-primary inline-flex items-center gap-2">Back to Home</a>
     </main>
+  )
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <CartProvider>
+        <AdminProvider>
+          <Routes>
+            {/* Admin routes — no Header/Footer, use AdminLayout internally */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
+            <Route path="/admin/products" element={<AdminGuard><AdminProducts /></AdminGuard>} />
+            <Route path="/admin/products/new" element={<AdminGuard><AdminProductEdit /></AdminGuard>} />
+            <Route path="/admin/products/:id" element={<AdminGuard><AdminProductEdit /></AdminGuard>} />
+            <Route path="/admin/brands" element={<AdminGuard><AdminBrands /></AdminGuard>} />
+            <Route path="/admin/inventory" element={<AdminGuard><AdminInventory /></AdminGuard>} />
+            <Route path="/admin/orders" element={<AdminGuard><AdminOrders /></AdminGuard>} />
+            <Route path="/admin/sales" element={<AdminGuard><AdminSales /></AdminGuard>} />
+            <Route path="/admin/dues" element={<AdminGuard><AdminDues /></AdminGuard>} />
+            <Route path="/admin/cashflow" element={<AdminGuard><AdminCashflow /></AdminGuard>} />
+            <Route path="/admin/reports" element={<AdminGuard><AdminReports /></AdminGuard>} />
+            <Route path="/admin/settings" element={<AdminGuard><AdminSettings /></AdminGuard>} />
+
+            {/* Storefront routes */}
+            <Route path="/" element={<StorefrontLayout><Home /></StorefrontLayout>} />
+            <Route path="/brands" element={<StorefrontLayout><BrandsPage /></StorefrontLayout>} />
+            <Route path="/brand/:slug" element={<StorefrontLayout><BrandPage /></StorefrontLayout>} />
+            <Route path="/product/:slug" element={<StorefrontLayout><ProductPage /></StorefrontLayout>} />
+            <Route path="/search" element={<StorefrontLayout><SearchPage /></StorefrontLayout>} />
+            <Route path="/cart" element={<StorefrontLayout><CartPage /></StorefrontLayout>} />
+            <Route path="/checkout" element={<StorefrontLayout><CheckoutPage /></StorefrontLayout>} />
+            <Route path="/order-confirmed" element={<StorefrontLayout><OrderConfirmationPage /></StorefrontLayout>} />
+            <Route path="/track" element={<StorefrontLayout><OrderTrackingPage /></StorefrontLayout>} />
+            <Route path="/wishlist" element={<StorefrontLayout><WishlistPage /></StorefrontLayout>} />
+            <Route path="/compare" element={<StorefrontLayout><ComparePage /></StorefrontLayout>} />
+            <Route path="/deals" element={<StorefrontLayout><DealsPage /></StorefrontLayout>} />
+            <Route path="/new" element={<StorefrontLayout><NewArrivalsPage /></StorefrontLayout>} />
+            <Route path="/support" element={<StorefrontLayout><SupportPage /></StorefrontLayout>} />
+            <Route path="/about" element={<StorefrontLayout><AboutPage /></StorefrontLayout>} />
+            <Route path="/delivery" element={<StorefrontLayout><DeliveryPage /></StorefrontLayout>} />
+            <Route path="/warranty" element={<StorefrontLayout><WarrantyPage /></StorefrontLayout>} />
+            <Route path="/returns" element={<StorefrontLayout><ReturnsPage /></StorefrontLayout>} />
+            <Route path="/privacy" element={<StorefrontLayout><PrivacyPage /></StorefrontLayout>} />
+            <Route path="/terms" element={<StorefrontLayout><TermsPage /></StorefrontLayout>} />
+            <Route path="/careers" element={<StorefrontLayout><CareersPage /></StorefrontLayout>} />
+            <Route path="*" element={<StorefrontLayout><NotFoundPage /></StorefrontLayout>} />
+          </Routes>
+        </AdminProvider>
+      </CartProvider>
+    </BrowserRouter>
+  )
+}
+
+function StorefrontLayout({ children }) {
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      <Header />
+      <main className="flex-1">
+        <ErrorBoundary>{children}</ErrorBoundary>
+      </main>
+      <Footer />
+    </div>
   )
 }
