@@ -294,6 +294,7 @@ export function Home() {
                     price: formatPrice(p.price_bdt),
                     image: p.primary_image_url,
                     slug: p.slug,
+                    inStock: p.in_stock,
                   }}
                 />
               ))}

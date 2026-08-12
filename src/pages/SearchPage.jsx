@@ -98,7 +98,7 @@ export function SearchPage() {
                 variant: p.variant,
                 price: formatPrice(p.price_bdt),
                 image: p.primary_image_url,
-                slug: p.slug,
+                slug: p.slug, inStock: p.in_stock,
               }}
             />
           ))}

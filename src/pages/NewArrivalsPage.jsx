@@ -60,7 +60,7 @@ export function NewArrivalsPage() {
           {phones.map((p) => (
             <PhoneCard key={p.id} phone={{
               id: p.id, brand: p.brand_name, name: p.name, variant: p.variant,
-              price: formatPrice(p.price_bdt), image: p.primary_image_url, slug: p.slug,
+              price: formatPrice(p.price_bdt), image: p.primary_image_url, slug: p.slug, inStock: p.in_stock,
             }} />
           ))}
         </div>

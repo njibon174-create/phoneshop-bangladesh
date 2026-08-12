@@ -77,7 +77,7 @@ export function DealsPage() {
                 price: formatPrice(p.price_bdt),
                 comparePrice: p.compare_price_bdt ? formatPrice(p.compare_price_bdt) : null,
                 image: p.primary_image_url,
-                slug: p.slug,
+                slug: p.slug, inStock: p.in_stock,
                 badge: 'Sale',
               }}
             />

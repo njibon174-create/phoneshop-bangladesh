@@ -121,6 +121,7 @@ export function BrandPage() {
                     image: p.primary_image_url,
                     slug: p.slug,
                     stockStatus: p.stock_status,
+                    inStock: p.in_stock,
                   }}
                 />
               ))}

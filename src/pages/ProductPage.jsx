@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ChevronRight, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, Check, Cpu, Battery, Camera, HardDrive, Smartphone, CheckCircle2 } from 'lucide-react'
+import { ChevronRight, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, Check, Cpu, Battery, Camera, HardDrive, Smartphone, CheckCircle2, Bell } from 'lucide-react'
+import { RestockRequestModal } from '../components/ui/RestockRequestModal'
 import { useCart } from '../lib/cart'
 import { useWishlist } from '../lib/wishlist'
 import { BackButton } from '../components/ui/BackButton'
@@ -71,6 +72,18 @@ function ProductSkeleton() {
           </div>
         </div>
       </div>
+      {restockOpen && (
+        <RestockRequestModal
+          phone={{
+            id: product.id,
+            slug: product.slug,
+            name: product.name,
+            brand: product.brand_name,
+            variant: product.variant,
+          }}
+          onClose={() => setRestockOpen(false)}
+        />
+      )}
     </main>
   )
 }
@@ -83,6 +96,18 @@ function ProductError({ message }) {
       <h1 className="text-2xl font-bold text-main-text mb-2">Couldn't load product</h1>
       <p className="text-sec-text mb-6">{message}</p>
       <button onClick={() => navigate('/')} className="btn-primary">Back to Home</button>
+      {restockOpen && (
+        <RestockRequestModal
+          phone={{
+            id: product.id,
+            slug: product.slug,
+            name: product.name,
+            brand: product.brand_name,
+            variant: product.variant,
+          }}
+          onClose={() => setRestockOpen(false)}
+        />
+      )}
     </main>
   )
 }
@@ -222,12 +247,24 @@ export function ProductPage() {
               <p className="text-textMuted mb-6 leading-relaxed">{product.short_desc}</p>
             )}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
-              <button onClick={addToCart} className="btn-primary py-3.5 px-5 flex items-center justify-center gap-2">
-                <ShoppingCart className="w-4 h-4" /> Add to Cart
-              </button>
-              <button onClick={addToCart} className="btn-secondary py-3.5 px-5 flex items-center justify-center gap-2">
-                <CheckCircle2 className="w-4 h-4" /> Buy Now
-              </button>
+              {product.in_stock && product.stock_count > 0 ? (
+                <>
+                  <button onClick={addToCart} className="btn-primary py-3.5 px-5 flex items-center justify-center gap-2">
+                    <ShoppingCart className="w-4 h-4" /> Add to Cart
+                  </button>
+                  <button onClick={addToCart} className="btn-secondary py-3.5 px-5 flex items-center justify-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" /> Buy Now
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setRestockOpen(true)}
+                  className="btn-primary py-3.5 px-5 flex items-center justify-center gap-2 w-full sm:w-auto"
+                  style={{ background: 'linear-gradient(135deg, #00D4FF, #00FF88)' }}
+                >
+                  <Bell className="w-4 h-4" /> Notify Me When In Stock
+                </button>
+              )}
               <button
                 onClick={() => toggleWish({ id: product.id, slug: product.slug, name: product.name, variant: product.variant, brand: product.brand_name, image: product.primary_image_url, unit_price_bdt: product.price_bdt, price_bdt: product.price_bdt })}
                 className={`btn-secondary py-3.5 px-5 flex items-center justify-center gap-2 ${inWishlist(product.slug) ? 'border-danger text-danger' : ''}`}
@@ -314,6 +351,18 @@ export function ProductPage() {
           </section>
         )}
       </div>
+      {restockOpen && (
+        <RestockRequestModal
+          phone={{
+            id: product.id,
+            slug: product.slug,
+            name: product.name,
+            brand: product.brand_name,
+            variant: product.variant,
+          }}
+          onClose={() => setRestockOpen(false)}
+        />
+      )}
     </main>
   )
 }
