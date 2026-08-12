@@ -174,10 +174,10 @@ export function AdminDues() {
                     )}
                     <div className="flex gap-2 pt-2 border-t border-border">
                       {c.remaining > 0 && c.status !== 'cancelled' && (
-                        <button onClick={() => { setPaying(c); setPayAmount(Number(c.remaining)) }} className="text-xs py-1.5 px-3 rounded border border-neon-green/40 bg-neon-green/10 text-neon-green hover:bg-neon-green/20 inline-flex items-center gap-1"ry text-xs py-1.5 px-3 flex items-center gap-1"><DollarSign className="w-3 h-3" /> Record Payment</button>
+                        <button onClick={() => { setPaying(c); setPayAmount(Number(c.remaining)) }} className="text-xs py-1.5 px-3 rounded border border-neon-green/40 bg-neon-green/10 text-neon-green hover:bg-neon-green/20 inline-flex items-center gap-1"><DollarSign className="w-3 h-3" /> Record Payment</button>
                       )}
                       {c.status !== 'cancelled' && c.status !== 'cleared' && (
-                        <button onClick={() => cancelCredit(c)} className="text-xs py-1.5 px-3 rounded border border-warning/40 bg-warning/10 text-warning hover:bg-warning/20 inline-flex items-center gap-1"center gap-1"><Ban className="w-3 h-3" /> Cancel Credit</button>
+                        <button onClick={() => cancelCredit(c)} className="text-xs py-1.5 px-3 rounded border border-warning/40 bg-warning/10 text-warning hover:bg-warning/20 inline-flex items-center gap-1"><Ban className="w-3 h-3" /> Cancel Credit</button>
                       )}
                       <button onClick={() => remove(c)} className="text-xs py-1.5 px-3 rounded border border-error/40 bg-error/10 text-error hover:bg-error/20 inline-flex items-center gap-1 ml-auto"><X className="w-3.5 h-3.5" /></button>
                     </div>
