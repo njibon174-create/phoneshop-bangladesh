@@ -1,13 +1,13 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { AdminLayout } from '../../components/admin/AdminLayout'
 import { ToastContainer, showToast } from '../../components/admin/Toast'
 import BarcodeScanner from '../../components/admin/BarcodeScanner'
 import { SellPhoneModal } from '../../components/admin/SellPhoneModal'
 import { supabase } from '../../lib/supabase'
-import { Plus, Edit2, Save, X, Package, Search, Camera, Trash2, ShoppingCart, LayoutGrid, List as ListIcon, ScanLine, Check, AlertCircle, ChevronDown, ChevronRight } from 'lucide-react'
+import { Plus, Edit2, Save, X, Package, Search, Camera, Trash2, ShoppingCart, LayoutGrid, List as ListIcon, ScanLine, Check, AlertCircle, ChevronDown, ChevronRight, Search as SearchIcon, Tag, DollarSign, Hash } from 'lucide-react'
 
 function formatBDT(n) {
-  return '\u09F3' + Number(n || 0).toLocaleString('en-IN')
+  return '৳' + Number(n || 0).toLocaleString('en-IN')
 }
 
 const EMPTY_FORM = {
@@ -24,42 +24,22 @@ const EMPTY_FORM = {
   is_featured: false,
   is_bestseller: false,
   specs: {
-    display: '',
-    refresh_rate_hz: '',
-    chip: '',
-    os: '',
-    ram_gb: '',
-    storage_gb: '',
-    rear_camera: '',
-    front_camera: '',
-    video_4k: '',
-    battery_mah: '',
-    charging_w: '',
-    wireless_charging_w: '',
-    weight_g: '',
-    ip_rating: '',
-    five_g: '',
-    colors: '',
+    display: '', refresh_rate_hz: '', chip: '', os: '',
+    ram_gb: '', storage_gb: '', rear_camera: '', front_camera: '',
+    video_4k: '', battery_mah: '', charging_w: '', wireless_charging_w: '',
+    weight_g: '', ip_rating: '', five_g: '', colors: '',
   },
 }
 
 const SPEC_FIELDS = [
-  ['display', 'Display'],
-  ['refresh_rate_hz', 'Refresh rate (Hz)'],
-  ['chip', 'Processor / Chip'],
-  ['os', 'Operating system'],
-  ['ram_gb', 'RAM (GB)'],
-  ['storage_gb', 'Storage (GB)'],
-  ['rear_camera', 'Rear camera'],
-  ['front_camera', 'Front camera'],
-  ['video_4k', 'Video'],
-  ['battery_mah', 'Battery (mAh)'],
-  ['charging_w', 'Charging (W)'],
-  ['wireless_charging_w', 'Wireless charging (W)'],
-  ['weight_g', 'Weight (g)'],
-  ['ip_rating', 'IP rating'],
-  ['five_g', '5G'],
-  ['colors', 'Colors available'],
+  ['display', 'Display'], ['refresh_rate_hz', 'Refresh rate (Hz)'],
+  ['chip', 'Processor / Chip'], ['os', 'Operating system'],
+  ['ram_gb', 'RAM (GB)'], ['storage_gb', 'Storage (GB)'],
+  ['rear_camera', 'Rear camera'], ['front_camera', 'Front camera'],
+  ['video_4k', 'Video'], ['battery_mah', 'Battery (mAh)'],
+  ['charging_w', 'Charging (W)'], ['wireless_charging_w', 'Wireless charging (W)'],
+  ['weight_g', 'Weight (g)'], ['ip_rating', 'IP rating'],
+  ['five_g', '5G'], ['colors', 'Colors available'],
 ]
 
 export function AdminInventory() {
@@ -73,14 +53,21 @@ export function AdminInventory() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
-  const [imeiList, setImeiList] = useState(['']) // list of IMEIs (one per unit)
+  const [imeiList, setImeiList] = useState([''])
   const [formError, setFormError] = useState(null)
   const [msg, setMsg] = useState(null)
   const [showScanner, setShowScanner] = useState(false)
-  const [imeiScannerOpen, setImeiScannerOpen] = useState(false)
   const [selling, setSelling] = useState(null)
-  const [scanResult, setScanResult] = useState(null)
   const [expanded, setExpanded] = useState({})
+
+  // === SCAN-AND-SELL FLOW ===
+  // scanMode: 'find' (find existing phone) | 'add' (add new phone IMEI)
+  const [scanMode, setScanMode] = useState(null)
+  const [scannedImei, setScannedImei] = useState('')
+  const [scannedMatch, setScannedMatch] = useState(null)
+  const [scannedLoading, setScannedLoading] = useState(false)
+  const [manualImeiInput, setManualImeiInput] = useState('')
+  const scanInputRef = useRef(null)
 
   async function load() {
     setLoading(true)
@@ -95,195 +82,178 @@ export function AdminInventory() {
 
   useEffect(() => { load() }, [])
 
+  // Look up an IMEI in the inventory. Looks in BOTH `phones` table (the
+  // inventory/IMEI ledger) and `products` table (the storefront catalog).
+  const lookupImei = useCallback(async (imei) => {
+    if (!imei || imei.length < 4) return
+    setScannedLoading(true)
+    setScannedMatch(null)
+    try {
+      // 1) Exact match in phones (inventory) — preferred source for sold units
+      const { data: phoneRows, error: phoneErr } = await supabase
+        .from('phones')
+        .select('*')
+        .eq('imei', imei)
+        .limit(1)
+      if (phoneErr) throw phoneErr
+      if (phoneRows && phoneRows.length > 0) {
+        setScannedMatch({ type: 'phone', data: phoneRows[0] })
+        setScannedLoading(false)
+        return
+      }
+      // 2) Fallback: match in products catalog by IMEI field (rare but possible)
+      const { data: productRows, error: prodErr } = await supabase
+        .from('products')
+        .select('*')
+        .eq('imei', imei)
+        .limit(1)
+      if (prodErr) throw prodErr
+      if (productRows && productRows.length > 0) {
+        setScannedMatch({ type: 'product', data: productRows[0] })
+      } else {
+        setScannedMatch({ type: 'none', imei })
+      }
+    } catch (e) {
+      console.error('IMEI lookup failed:', e)
+      setScannedMatch({ type: 'error', imei, error: e.message })
+    }
+    setScannedLoading(false)
+  }, [])
+
+  // When user closes the scanner, jump straight into the scan flow
+  function openScanAndSell() {
+    setScanMode('find')
+    setScannedImei('')
+    setScannedMatch(null)
+    setManualImeiInput('')
+    setShowScanner(true)
+  }
+
+  function handleScanResult(decodedText) {
+    setShowScanner(false)
+    const trimmed = (decodedText || '').trim()
+    setScannedImei(trimmed)
+    lookupImei(trimmed)
+  }
+
+  function handleManualSubmit(e) {
+    e.preventDefault()
+    if (!manualImeiInput.trim()) return
+    setScannedImei(manualImeiInput.trim())
+    lookupImei(manualImeiInput.trim())
+  }
+
+  function clearScan() {
+    setScannedImei('')
+    setScannedMatch(null)
+    setManualImeiInput('')
+  }
+
+  // Quick-sell the scanned phone
+  function sellScannedPhone() {
+    if (!scannedMatch || scannedMatch.type !== 'phone') return
+    // Already sold?
+    if (scannedMatch.data.status === 'sold') {
+      showToast('This phone is already marked as sold.', 'warn')
+      return
+    }
+    setSelling(scannedMatch.data)
+  }
+
+  // Stats
+  const stats = useMemo(() => {
+    const inStock = phones.filter((p) => p.status === 'in_stock').length
+    const sold = phones.filter((p) => p.status === 'sold').length
+    const reserved = phones.filter((p) => p.status === 'reserved').length
+    const inventoryValue = phones
+      .filter((p) => p.status === 'in_stock')
+      .reduce((sum, p) => sum + Number(p.mrp || p.buy_price || 0), 0)
+    return { inStock, sold, reserved, inventoryValue, total: phones.length }
+  }, [phones])
+
   const filtered = phones.filter((p) => {
     if (brandFilter !== 'all' && p.brand !== brandFilter) return false
     if (statusFilter !== 'all' && p.status !== statusFilter) return false
     if (search) {
-      const s = search.toLowerCase()
-      if (!((p.brand || '').toLowerCase().includes(s) ||
-            (p.model || '').toLowerCase().includes(s) ||
-            (p.variant || '').toLowerCase().includes(s) ||
-            (p.imei || '').includes(s))) return false
+      const q = search.toLowerCase()
+      const hay = `${p.brand} ${p.model} ${p.variant} ${p.imei}`.toLowerCase()
+      if (!hay.includes(q)) return false
     }
     return true
   })
 
-  // Aggregate stats by (brand, model, variant) — this is what shows on storefront
-  const storefrontProducts = (() => {
-    const map = new Map()
-    for (const p of phones) {
-      const key = `${p.brand}|${p.model}|${p.variant || ''}`
-      if (!map.has(key)) {
-        map.set(key, {
-          brand: p.brand, model: p.model, variant: p.variant || 'Standard',
-          units: [], is_featured: false, is_bestseller: false, image_url: p.image_url,
-          buy_price: 0, mrp: 0, cost_price: 0, compare_at_price: p.compare_at_price,
-          warranty_months: p.warranty_months || 12, specs: p.specs,
-        })
-      }
-      const agg = map.get(key)
-      agg.units.push(p)
-      if (p.is_featured) agg.is_featured = true
-      if (p.is_bestseller) agg.is_bestseller = true
-      if (!agg.image_url && p.image_url) agg.image_url = p.image_url
-      if (!agg.specs || Object.keys(agg.specs).length === 0) agg.specs = p.specs
-    }
-    return [...map.values()].map((a) => {
-      const inStock = a.units.filter((u) => u.status === 'in_stock')
-      const mrp = inStock.length > 0 ? Math.max(...inStock.map((u) => u.mrp || 0)) : Math.max(...a.units.map((u) => u.mrp || 0))
-      const cost = inStock.length > 0 ? Math.max(...inStock.map((u) => u.cost_price || u.buy_price || 0)) : 0
-      return {
-        ...a,
-        in_stock: inStock.length,
-        total: a.units.length,
-        sold: a.units.filter((u) => u.status === 'sold').length,
-        mrp, cost_price: cost,
-      }
-    }).sort((a, b) => (b.in_stock > 0 ? 1 : 0) - (a.in_stock > 0 ? 1 : 0) || a.brand.localeCompare(b.brand) || a.model.localeCompare(b.model))
-  })()
-
-  // Group phones by storefront product
-  const groupedPhones = (() => {
-    const groups = new Map()
-    for (const p of filtered) {
-      const key = `${p.brand}|${p.model}|${p.variant || ''}`
-      if (!groups.has(key)) groups.set(key, [])
-      groups.get(key).push(p)
-    }
-    return [...groups.entries()]
-  })()
-
-  function openAdd() {
-    setEditingId(null)
-    setForm({ ...EMPTY_FORM, specs: { ...EMPTY_FORM.specs } })
-    setImeiList([''])
+  // === ADD-PHONE FLOW ===
+  async function savePhone(e) {
+    e.preventDefault()
     setFormError(null)
-    setShowAddForm(true)
+    if (!form.brand) { setFormError('Brand is required'); return }
+    if (!form.model) { setFormError('Model is required'); return }
+    if (!form.mrp || Number(form.mrp) <= 0) { setFormError('MRP (selling price) is required'); return }
+
+    const payload = {
+      brand: form.brand,
+      model: form.model,
+      variant: form.variant || 'Standard',
+      imei: form.imei || null,
+      buy_price: form.buy_price ? Number(form.buy_price) : null,
+      mrp: Number(form.mrp),
+      compare_at_price: form.compare_at_price ? Number(form.compare_at_price) : null,
+      cost_price: form.cost_price ? Number(form.cost_price) : null,
+      warranty_months: Number(form.warranty_months) || 12,
+      image_url: form.image_url || null,
+      is_featured: form.is_featured,
+      is_bestseller: form.is_bestseller,
+      specs: form.specs,
+      status: 'in_stock',
+    }
+
+    let err
+    if (editingId) {
+      const r = await supabase.from('phones').update(payload).eq('id', editingId)
+      err = r.error
+    } else {
+      const r = await supabase.from('phones').insert(payload)
+      err = r.error
+    }
+    if (err) { setFormError(err.message); return }
+    setShowAddForm(false)
+    setEditingId(null)
+    setForm(EMPTY_FORM)
+    setMsg({ type: 'success', text: editingId ? 'Phone updated' : 'Phone added to inventory' })
+    setTimeout(() => setMsg(null), 3000)
+    load()
   }
 
-  function openEdit(p) {
+  function startEdit(p) {
     setEditingId(p.id)
     setForm({
       brand: p.brand || '',
       model: p.model || '',
       variant: p.variant || '',
       imei: p.imei || '',
-      buy_price: p.buy_price || '',
-      mrp: p.mrp || '',
-      compare_at_price: p.compare_at_price || '',
-      cost_price: p.cost_price || '',
-      warranty_months: p.warranty_months || 12,
-      image_url: p.image_url || '',
+      buy_price: p.buy_price ?? '',
+      mrp: p.mrp ?? '',
+      compare_at_price: p.compare_at_price ?? '',
+      cost_price: p.cost_price ?? '',
+      warranty_months: p.warranty_months ?? 12,
+      image_url: p.image_url ?? '',
       is_featured: !!p.is_featured,
       is_bestseller: !!p.is_bestseller,
       specs: { ...EMPTY_FORM.specs, ...(p.specs || {}) },
     })
-    setImeiList([p.imei || ''])
-    setFormError(null)
     setShowAddForm(true)
   }
 
-  function closeForm() {
-    setShowAddForm(false); setEditingId(null); setFormError(null); setImeiList([''])
-  }
-
-  async function save() {
+  function cancelEdit() {
+    setShowAddForm(false)
+    setEditingId(null)
+    setForm(EMPTY_FORM)
     setFormError(null)
-    // Validate common fields
-    if (!form.brand.trim()) { setFormError('Brand is required'); return }
-    if (!form.model.trim()) { setFormError('Model is required'); return }
-    if (!form.mrp || Number(form.mrp) <= 0) { setFormError('MRP (selling price) is required'); return }
-    if (!form.buy_price || Number(form.buy_price) <= 0) { setFormError('Buy price is required'); return }
-    if (Number(form.buy_price) > Number(form.mrp)) { setFormError('Buy price cannot exceed MRP'); return }
-
-    // Validate IMEIs
-    const imeis = imeiList.map((i) => (i || '').replace(/\D/g, '').trim()).filter(Boolean)
-    if (editingId) {
-      // Edit mode: keep the existing IMEI, just update
-      if (imeis.length === 0) { setFormError('IMEI is required'); return }
-      if (imeis[0].length < 14) { setFormError('IMEI must be at least 14 digits'); return }
-    } else {
-      // Add mode: at least 1 IMEI required
-      if (imeis.length === 0) { setFormError('At least one IMEI is required. Click "+ Add another IMEI" to add more units.'); return }
-      for (const im of imeis) {
-        if (im.length < 14) { setFormError(`IMEI "${im}" must be at least 14 digits`); return }
-      }
-      // Check duplicates within list
-      const uniqueImeis = new Set(imeis)
-      if (uniqueImeis.size !== imeis.length) {
-        const dups = imeis.filter((im, i) => imeis.indexOf(im) !== i)
-        setFormError(`Duplicate IMEIs in list: ${[...new Set(dups)].join(', ')}`)
-        return
-      }
-    }
-
-    // Check against DB
-    const { data: existing } = await supabase
-      .from('phones')
-      .select('imei')
-      .in('imei', imeis)
-    if (existing && existing.length > 0) {
-      const existingImeis = existing.map((e) => e.imei)
-      const skip = editingId ? [form.imei] : []
-      const conflicts = existingImeis.filter((im) => !skip.includes(im))
-      if (conflicts.length > 0) {
-        setFormError(`IMEI${conflicts.length > 1 ? 's' : ''} already in system: ${conflicts.join(', ')}`)
-        return
-      }
-    }
-
-    // Clean specs - drop empty values
-    const cleanSpecs = {}
-    for (const [k, v] of Object.entries(form.specs)) {
-      if (v && String(v).trim()) cleanSpecs[k] = String(v).trim()
-    }
-
-    const basePayload = {
-      brand: form.brand.trim(),
-      model: form.model.trim(),
-      variant: form.variant.trim() || 'Standard',
-      buy_price: Number(form.buy_price),
-      mrp: Number(form.mrp),
-      compare_at_price: form.compare_at_price ? Number(form.compare_at_price) : null,
-      cost_price: form.cost_price ? Number(form.cost_price) : Number(form.buy_price),
-      warranty_months: Number(form.warranty_months) || 12,
-      image_url: form.image_url.trim() || null,
-      is_featured: form.is_featured,
-      is_bestseller: form.is_bestseller,
-      specs: cleanSpecs,
-      status: 'in_stock',
-      is_active: true,
-    }
-
-    if (editingId) {
-      const payload = { ...basePayload, imei: imeis[0] }
-      const { error } = await supabase.from('phones').update(payload).eq('id', editingId)
-      if (error) { setFormError(error.message); return }
-      showToast('Phone updated.', 'success')
-    } else {
-      // Bulk insert: one row per IMEI
-      const rows = imeis.map((imei) => ({ ...basePayload, imei }))
-      const { error } = await supabase.from('phones').insert(rows)
-      if (error) {
-        if (error.code === '23505') setFormError('One or more IMEIs already exist in the system.')
-        else setFormError(error.message)
-        return
-      }
-      showToast(`${rows.length} unit${rows.length > 1 ? 's' : ''} added — visible on storefront now.`, 'success')
-    }
-    closeForm()
-    load()
   }
 
-  async function del(p) {
-    if (!confirm(`Delete ${p.brand} ${p.model} (IMEI ${p.imei})? This cannot be undone.`)) return
-    await supabase.from('phones').delete().eq('id', p.id)
-    showToast('Phone deleted.', 'success')
-    load()
-  }
-
-  async function toggleFeatured(p) {
-    await supabase.from('phones').update({ is_featured: !p.is_featured }).eq('id', p.id)
+  async function deletePhone(id) {
+    if (!confirm('Delete this phone from inventory?')) return
+    await supabase.from('phones').delete().eq('id', id)
     load()
   }
 
@@ -292,443 +262,410 @@ export function AdminInventory() {
     load()
   }
 
-  function handleScanResult(code) {
-    setScanResult(code)
-    setShowScanner(false)
-    // Check if this IMEI already exists
-    const found = phones.find((p) => p.imei === code)
-    if (found) {
-      showToast(`IMEI found: ${found.brand} ${found.model} (${found.status})`, 'info')
-    } else {
-      showToast('New IMEI — fill in the form to add this phone', 'success')
-      // Fill the first empty slot in imeiList, or append
-      setImeiList((list) => {
-        const idx = list.findIndex((i) => !i.trim())
-        if (idx >= 0) {
-          const copy = [...list]
-          copy[idx] = code
-          return copy
-        }
-        return [...list, code]
-      })
-      setShowAddForm(true)
-    }
-  }
-
   function handleSellSuccess() {
     setSelling(null)
     load()
-    showToast('Phone sold successfully', 'success')
   }
 
-  const totalUnits = phones.length
-  const inStockCount = phones.filter((p) => p.status === 'in_stock').length
-  const soldCount = phones.filter((p) => p.status === 'sold').length
-  const storefrontProductCount = storefrontProducts.length
-  const storefrontInStockCount = storefrontProducts.filter((s) => s.in_stock > 0).length
-  const stockValue = phones.filter((p) => p.status === 'in_stock').reduce((sum, p) => sum + Number(p.mrp || 0), 0)
-  const totalCost = phones.filter((p) => p.status === 'in_stock').reduce((sum, p) => sum + Number(p.cost_price || p.buy_price || 0), 0)
-  const potentialProfit = stockValue - totalCost
-
-  const allBrandNames = [...new Set(phones.map((p) => p.brand))].sort()
-
   return (
-    <AdminLayout title="Inventory & Storefront" subtitle="Every phone you add here appears on the storefront automatically" actions={
-      <div className="flex gap-2 flex-wrap">
-        <button onClick={() => setShowScanner(true)} className="btn-secondary text-sm py-2 px-3 inline-flex items-center gap-1">
-          <ScanLine className="w-4 h-4" /> Scan IMEI
-        </button>
-        {!showAddForm && <button onClick={openAdd} className="btn-primary text-sm py-2 px-3 inline-flex items-center gap-1">
-          <Plus className="w-4 h-4" /> Add Phone
-        </button>}
-      </div>
-    }>
+    <AdminLayout
+      title="Inventory"
+      subtitle={`${stats.total} phones tracked • ${stats.inStock} in stock • ${stats.sold} sold`}
+      actions={
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={openScanAndSell}
+            className="bg-gradient-to-r from-neon-green to-neon-blue text-black font-semibold text-sm py-2 px-4 inline-flex items-center gap-2 rounded-lg shadow-lg hover:shadow-neon-green/30 transition-all"
+          >
+            <ScanLine className="w-5 h-5" />
+            Scan IMEI to Sell
+          </button>
+          <button
+            onClick={() => { setShowAddForm(!showAddForm); if (showAddForm) cancelEdit() }}
+            className="btn-secondary text-sm py-2 px-3 inline-flex items-center gap-1"
+          >
+            <Plus className="w-4 h-4" /> Add Phone
+          </button>
+        </div>
+      }
+    >
       <ToastContainer />
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 mb-6">
+      {/* === SCAN-AND-SELL PANEL === */}
+      {(scanMode || scannedImei || scannedMatch) && (
+        <div className="card p-5 mb-6 border-2 border-neon-green/30 bg-gradient-to-br from-neon-green/5 to-neon-blue/5">
+          <div className="flex items-start justify-between mb-4 gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-neon-green to-neon-blue flex items-center justify-center text-black">
+                <ScanLine className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-main-text">Scan IMEI to Sell Locally</h2>
+                <p className="text-xs text-sec-text">Find a phone in your inventory by its IMEI barcode, then sell it.</p>
+              </div>
+            </div>
+            <button onClick={clearScan} className="btn-ghost p-1.5" aria-label="Close scan panel">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Step 1: Choose scan method */}
+          {!scannedImei && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <button
+                onClick={() => setShowScanner(true)}
+                className="card-hover p-5 text-left bg-surfaceElevated border border-border hover:border-neon-green transition-colors"
+              >
+                <Camera className="w-7 h-7 text-neon-green mb-2" />
+                <p className="font-semibold text-main-text mb-1">Scan with Camera</p>
+                <p className="text-xs text-sec-text">Use your phone's camera to scan the IMEI barcode on the box.</p>
+              </button>
+              <form onSubmit={handleManualSubmit} className="card-hover p-5 bg-surfaceElevated border border-border hover:border-neon-blue transition-colors">
+                <Hash className="w-7 h-7 text-neon-blue mb-2" />
+                <p className="font-semibold text-main-text mb-1">Enter IMEI Manually</p>
+                <p className="text-xs text-sec-text mb-2">Type or paste the 15-digit IMEI number.</p>
+                <input
+                  ref={scanInputRef}
+                  type="text"
+                  value={manualImeiInput}
+                  onChange={(e) => setManualImeiInput(e.target.value)}
+                  placeholder="e.g. 356789123456789"
+                  className="input w-full text-sm font-mono"
+                  inputMode="numeric"
+                  autoComplete="off"
+                />
+                <button
+                  type="submit"
+                  disabled={!manualImeiInput.trim()}
+                  className="btn-primary text-xs py-1.5 px-3 mt-2 w-full disabled:opacity-40"
+                >
+                  Find Phone
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* Step 2: Show scanned IMEI + loading state */}
+          {scannedImei && scannedLoading && (
+            <div className="bg-surface border border-border rounded-xl p-5 flex items-center gap-3">
+              <div className="animate-pulse w-10 h-10 bg-neon-green/20 rounded-lg" />
+              <div className="flex-1">
+                <p className="text-xs text-sec-text">Looking up IMEI</p>
+                <p className="font-mono font-semibold text-main-text">{scannedImei}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3a: Phone found — show details + sell button */}
+          {scannedMatch && scannedMatch.type === 'phone' && (
+            <div className="bg-surface border-2 border-neon-green/40 rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Check className="w-5 h-5 text-neon-green" />
+                <span className="text-xs font-semibold text-neon-green uppercase tracking-wider">Phone Found in Inventory</span>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div>
+                  <p className="text-[10px] text-sec-text uppercase">Brand</p>
+                  <p className="font-semibold text-main-text">{scannedMatch.data.brand}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-sec-text uppercase">Model</p>
+                  <p className="font-semibold text-main-text">{scannedMatch.data.model}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-sec-text uppercase">Variant</p>
+                  <p className="font-semibold text-main-text">{scannedMatch.data.variant || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-sec-text uppercase">Status</p>
+                  <span className={`badge text-xs ${scannedMatch.data.status === 'sold' ? 'bg-error/20 text-error' : scannedMatch.data.status === 'reserved' ? 'bg-warning/20 text-warning' : 'bg-success/20 text-success'}`}>
+                    {scannedMatch.data.status === 'sold' ? 'Sold' : scannedMatch.data.status === 'reserved' ? 'Reserved' : 'In Stock'}
+                  </span>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-[10px] text-sec-text uppercase">IMEI</p>
+                  <p className="font-mono text-xs text-main-text">{scannedMatch.data.imei}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-sec-text uppercase">MRP</p>
+                  <p className="font-semibold text-main-text">{formatBDT(scannedMatch.data.mrp)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-sec-text uppercase">Cost</p>
+                  <p className="font-semibold text-main-text">{formatBDT(scannedMatch.data.buy_price || scannedMatch.data.cost_price)}</p>
+                </div>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                {scannedMatch.data.status === 'sold' ? (
+                  <button
+                    disabled
+                    className="btn-secondary text-sm py-2 px-4 inline-flex items-center gap-1 opacity-50 cursor-not-allowed"
+                  >
+                    <ShoppingCart className="w-4 h-4" /> Already Sold
+                  </button>
+                ) : (
+                  <button
+                    onClick={sellScannedPhone}
+                    className="btn-primary text-sm py-2.5 px-5 inline-flex items-center gap-2"
+                  >
+                    <ShoppingCart className="w-4 h-4" /> Sell This Phone
+                  </button>
+                )}
+                <button onClick={clearScan} className="btn-secondary text-sm py-2 px-4">Scan Another</button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3b: Phone not found */}
+          {scannedMatch && scannedMatch.type === 'none' && (
+            <div className="bg-surface border-2 border-warning/40 rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertCircle className="w-5 h-5 text-warning" />
+                <span className="text-xs font-semibold text-warning uppercase tracking-wider">No Phone Found</span>
+              </div>
+              <p className="text-sm text-sec-text mb-2">
+                No phone with IMEI <span className="font-mono text-main-text">{scannedMatch.imei}</span> is in your inventory.
+              </p>
+              <p className="text-xs text-sec-text mb-4">
+                Either this IMEI was never added to inventory, or the customer is bringing a phone you haven't logged yet.
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                <button onClick={clearScan} className="btn-primary text-sm py-2 px-4">Try Another IMEI</button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3c: Error */}
+          {scannedMatch && scannedMatch.type === 'error' && (
+            <div className="bg-surface border-2 border-error/40 rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertCircle className="w-5 h-5 text-error" />
+                <span className="text-xs font-semibold text-error uppercase tracking-wider">Lookup Error</span>
+              </div>
+              <p className="text-sm text-sec-text mb-3">{scannedMatch.error}</p>
+              <button onClick={clearScan} className="btn-secondary text-sm py-2 px-4">Try Again</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* === STATS BAR === */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <div className="card p-4">
-          <p className="text-xs text-sec-text uppercase">Storefront products</p>
-          <p className="text-xl font-bold text-main-text">{storefrontProductCount}</p>
-          <p className="text-[10px] text-muted-text">{storefrontInStockCount} in stock</p>
+          <p className="text-xs text-sec-text uppercase mb-1">In Stock</p>
+          <p className="text-2xl font-bold text-neon-green">{stats.inStock}</p>
         </div>
         <div className="card p-4">
-          <p className="text-xs text-sec-text uppercase">Total phone units</p>
-          <p className="text-xl font-bold text-main-text">{totalUnits}</p>
-          <p className="text-[10px] text-muted-text">{inStockCount} in stock / {soldCount} sold</p>
+          <p className="text-xs text-sec-text uppercase mb-1">Sold</p>
+          <p className="text-2xl font-bold text-main-text">{stats.sold}</p>
         </div>
         <div className="card p-4">
-          <p className="text-xs text-sec-text uppercase">Stock value</p>
-          <p className="text-xl font-bold text-main-text">{formatBDT(stockValue)}</p>
+          <p className="text-xs text-sec-text uppercase mb-1">Reserved</p>
+          <p className="text-2xl font-bold text-warning">{stats.reserved}</p>
         </div>
         <div className="card p-4">
-          <p className="text-xs text-sec-text uppercase">Cost basis</p>
-          <p className="text-xl font-bold text-sec-text">{formatBDT(totalCost)}</p>
-        </div>
-        <div className="card p-4">
-          <p className="text-xs text-sec-text uppercase">Potential profit</p>
-          <p className="text-xl font-bold text-neon-green">{formatBDT(potentialProfit)}</p>
-        </div>
-        <div className="card p-4">
-          <p className="text-xs text-sec-text uppercase">Unique models</p>
-          <p className="text-xl font-bold text-neon-blue">{storefrontProductCount}</p>
+          <p className="text-xs text-sec-text uppercase mb-1">Inventory Value</p>
+          <p className="text-xl font-bold text-main-text">{formatBDT(stats.inventoryValue)}</p>
         </div>
       </div>
 
-      {formError && (
-        <div className="card p-3 mb-4 text-danger text-sm flex items-center gap-2">
-          <AlertCircle className="w-4 h-4" /> {formError}
+      {/* === FILTERS === */}
+      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+        <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+          <Search className="w-4 h-4 text-sec-text" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search IMEI, brand, model..."
+            className="input flex-1 text-sm"
+          />
         </div>
-      )}
-
-      {showAddForm && (
-        <div className="card p-5 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-main-text">
-              {editingId ? 'Edit Phone' : 'Add Phone — appears on storefront immediately'}
-            </h3>
-            <button onClick={closeForm} className="btn-ghost p-1"><X className="w-4 h-4" /></button>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
-              <h4 className="text-sm font-semibold text-main-text mb-3 flex items-center gap-2">
-                <Package className="w-4 h-4 text-neon-green" /> Identification
-              </h4>
-              <div className="space-y-3">
-                <div>
-                  <label className="label">Brand *</label>
-                  <input list="brand-list" value={form.brand} onChange={(e) => setForm((f) => ({ ...f, brand: e.target.value }))} className="input" placeholder="Apple, Samsung, Xiaomi..." />
-                  <datalist id="brand-list">
-                    {brands.map((b) => <option key={b.id} value={b.name} />)}
-                  </datalist>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="label">Model *</label>
-                    <input type="text" value={form.model} onChange={(e) => setForm((f) => ({ ...f, model: e.target.value }))} className="input" placeholder="iPhone 15 Pro Max" />
-                  </div>
-                  <div>
-                    <label className="label">Variant / Color</label>
-                    <input type="text" value={form.variant} onChange={(e) => setForm((f) => ({ ...f, variant: e.target.value }))} className="input" placeholder="Natural Titanium" />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-medium text-sec-text">
-                      IMEIs * ({editingId ? '1 unit' : `${imeiList.length} unit${imeiList.length > 1 ? 's' : ''}`})
-                    </label>
-                    {!editingId && (
-                      <button
-                        type="button"
-                        onClick={() => setImeiList((list) => [...list, ''])}
-                        className="btn-secondary text-xs py-1 px-2 inline-flex items-center gap-1"
-                      >
-                        <Plus className="w-3 h-3" /> Add another IMEI
-                      </button>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    {imeiList.map((imei, idx) => (
-                      <div key={idx} className="flex gap-1">
-                        <span className="text-xs text-muted-text self-center w-6 shrink-0 text-right">#{idx + 1}</span>
-                        <input
-                          type="text"
-                          value={imei}
-                          onChange={(e) => {
-                            const v = e.target.value.replace(/\D/g, '')
-                            setImeiList((list) => list.map((it, i) => i === idx ? v : it))
-                          }}
-                          className="input font-mono text-xs flex-1"
-                          placeholder="353000001234567"
-                          maxLength="16"
-                          disabled={editingId && idx > 0}
-                        />
-                        {imeiList.length > 1 && !editingId && (
-                          <button
-                            type="button"
-                            onClick={() => setImeiList((list) => list.filter((_, i) => i !== idx))}
-                            className="btn-ghost p-2 shrink-0 text-danger hover:bg-danger/10"
-                            title="Remove IMEI"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-between mt-2">
-                    <p className="text-[10px] text-muted-text">
-                      Same model+variant with different IMEIs = separate stock units.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setImeiScannerOpen(true)}
-                      className="btn-secondary text-xs py-1 px-2 inline-flex items-center gap-1 shrink-0"
-                    >
-                      <Camera className="w-3 h-3" /> Scan
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label className="label">Image URL</label>
-                  <input type="url" value={form.image_url} onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value }))} className="input" placeholder="https://..." />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" checked={form.is_featured} onChange={(e) => setForm((f) => ({ ...f, is_featured: e.target.checked }))} className="accent-neon-green" />
-                    <span>Featured</span>
-                  </label>
-                  <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" checked={form.is_bestseller} onChange={(e) => setForm((f) => ({ ...f, is_bestseller: e.target.checked }))} className="accent-neon-green" />
-                    <span>Bestseller</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-semibold text-main-text mb-3 flex items-center gap-2">
-                <span className="text-neon-green">৳</span> Pricing
-              </h4>
-              <div className="space-y-3">
-                <div>
-                  <label className="label">Buy price (your cost) *</label>
-                  <input type="number" value={form.buy_price} onChange={(e) => setForm((f) => ({ ...f, buy_price: e.target.value }))} className="input" />
-                </div>
-                <div>
-                  <label className="label">MRP (selling price) *</label>
-                  <input type="number" value={form.mrp} onChange={(e) => setForm((f) => ({ ...f, mrp: e.target.value }))} className="input" />
-                </div>
-                <div>
-                  <label className="label">Compare-at price (optional, for strikethrough)</label>
-                  <input type="number" value={form.compare_at_price} onChange={(e) => setForm((f) => ({ ...f, compare_at_price: e.target.value }))} className="input" placeholder="Higher than MRP to show as deal" />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="label">Cost price (optional)</label>
-                    <input type="number" value={form.cost_price} onChange={(e) => setForm((f) => ({ ...f, cost_price: e.target.value }))} className="input" placeholder="Defaults to buy price" />
-                  </div>
-                  <div>
-                    <label className="label">Warranty (months)</label>
-                    <input type="number" value={form.warranty_months} onChange={(e) => setForm((f) => ({ ...f, warranty_months: e.target.value }))} className="input" />
-                  </div>
-                </div>
-                {form.mrp && form.buy_price && Number(form.mrp) > 0 && Number(form.buy_price) > 0 && (
-                  <div className="card p-3 bg-elev-bg/50 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-sec-text">Profit per unit:</span>
-                      <span className="font-semibold text-neon-green">
-                        {formatBDT(Number(form.mrp) - Number(form.buy_price))}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sec-text">Margin:</span>
-                      <span className="font-semibold text-neon-green">
-                        {(((Number(form.mrp) - Number(form.buy_price)) / Number(form.mrp)) * 100).toFixed(1)}%
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <h4 className="text-sm font-semibold text-main-text mb-3">Specifications</h4>
-            <p className="text-xs text-muted-text mb-3">Fill in what you know — these appear on the product detail page. Empty fields are hidden.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
-              {SPEC_FIELDS.map(([key, label]) => (
-                <div key={key}>
-                  <label className="label">{label}</label>
-                  <input type="text" value={form.specs[key] || ''} onChange={(e) => setForm((f) => ({ ...f, specs: { ...f.specs, [key]: e.target.value } }))} className="input text-sm" />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex gap-2 mt-6">
-            <button onClick={save} className="btn-primary text-sm py-2 px-4 inline-flex items-center gap-2">
-              <Save className="w-4 h-4" />
-              {editingId
-                ? 'Save changes'
-                : `Add ${imeiList.filter((i) => i.trim()).length || 1} unit${imeiList.filter((i) => i.trim()).length !== 1 ? 's' : ''} to inventory + storefront`}
-            </button>
-            <button onClick={closeForm} className="btn-secondary text-sm py-2 px-4 inline-flex items-center gap-2">
-              <X className="w-4 h-4" /> Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className="card p-4 mb-4 flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-text" />
-          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search brand, model, IMEI..." className="input pl-10" />
-        </div>
-        <select value={brandFilter} onChange={(e) => setBrandFilter(e.target.value)} className="input w-auto">
+        <select value={brandFilter} onChange={(e) => setBrandFilter(e.target.value)} className="input text-sm">
           <option value="all">All brands</option>
-          {allBrandNames.map((b) => <option key={b} value={b}>{b}</option>)}
+          {brands.map((b) => <option key={b.id} value={b.name}>{b.name}</option>)}
         </select>
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="input w-auto">
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="input text-sm">
           <option value="all">All status</option>
-          <option value="in_stock">In stock</option>
+          <option value="in_stock">In Stock</option>
+          <option value="reserved">Reserved</option>
           <option value="sold">Sold</option>
-          <option value="returned">Returned</option>
-          <option value="defective">Defective</option>
         </select>
-        <div className="flex gap-1 ml-auto">
-          <button onClick={() => setView('cards')} className={"btn-ghost p-2 " + (view === 'cards' ? 'text-neon-green' : '')} title="Cards">
+        <div className="flex bg-surfaceElevated rounded-lg p-1">
+          <button onClick={() => setView('cards')} className={`px-3 py-1 rounded text-xs ${view === 'cards' ? 'bg-neon-green/20 text-neon-green' : 'text-sec-text'}`}>
             <LayoutGrid className="w-4 h-4" />
           </button>
-          <button onClick={() => setView('table')} className={"btn-ghost p-2 " + (view === 'table' ? 'text-neon-green' : '')} title="Table">
+          <button onClick={() => setView('table')} className={`px-3 py-1 rounded text-xs ${view === 'table' ? 'bg-neon-green/20 text-neon-green' : 'text-sec-text'}`}>
             <ListIcon className="w-4 h-4" />
           </button>
         </div>
       </div>
 
+      {msg && (
+        <div className={`mb-4 p-3 rounded-lg text-sm ${msg.type === 'success' ? 'bg-success/20 text-success' : 'bg-error/20 text-error'}`}>
+          {msg.text}
+        </div>
+      )}
+
+      {/* === ADD/EDIT FORM === */}
+      {showAddForm && (
+        <form onSubmit={savePhone} className="card p-5 mb-6 space-y-4">
+          <h3 className="font-bold text-main-text">{editingId ? 'Edit Phone' : 'Add Phone to Inventory'}</h3>
+          {formError && <div className="bg-error/20 text-error p-3 rounded text-sm">{formError}</div>}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="label">Brand *</label>
+              <select value={form.brand} onChange={(e) => setForm((f) => ({ ...f, brand: e.target.value }))} className="input">
+                <option value="">—</option>
+                {brands.map((b) => <option key={b.id} value={b.name}>{b.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label">Model *</label>
+              <input type="text" value={form.model} onChange={(e) => setForm((f) => ({ ...f, model: e.target.value }))} className="input" placeholder="e.g. iPhone 15 Pro Max" />
+            </div>
+            <div>
+              <label className="label">Variant</label>
+              <input type="text" value={form.variant} onChange={(e) => setForm((f) => ({ ...f, variant: e.target.value }))} className="input" placeholder="e.g. 256GB Natural Titanium" />
+            </div>
+            <div>
+              <label className="label">IMEI</label>
+              <input type="text" value={form.imei} onChange={(e) => setForm((f) => ({ ...f, imei: e.target.value }))} className="input font-mono" placeholder="15-digit IMEI" />
+            </div>
+            <div>
+              <label className="label">Buy Price (Cost)</label>
+              <input type="number" value={form.buy_price} onChange={(e) => setForm((f) => ({ ...f, buy_price: e.target.value }))} className="input" placeholder="0" />
+            </div>
+            <div>
+              <label className="label">MRP (Selling Price) *</label>
+              <input type="number" value={form.mrp} onChange={(e) => setForm((f) => ({ ...f, mrp: e.target.value }))} className="input" placeholder="0" />
+            </div>
+            <div>
+              <label className="label">Warranty (months)</label>
+              <input type="number" value={form.warranty_months} onChange={(e) => setForm((f) => ({ ...f, warranty_months: e.target.value }))} className="input" />
+            </div>
+            <div>
+              <label className="label">Image URL</label>
+              <input type="text" value={form.image_url} onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value }))} className="input" placeholder="https://..." />
+            </div>
+          </div>
+
+          <details className="bg-surfaceElevated rounded-lg p-3">
+            <summary className="cursor-pointer text-sm font-semibold text-sec-text">Specifications (optional)</summary>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+              {SPEC_FIELDS.map(([key, label]) => (
+                <div key={key}>
+                  <label className="label">{label}</label>
+                  <input
+                    type="text"
+                    value={form.specs[key] || ''}
+                    onChange={(e) => setForm((f) => ({ ...f, specs: { ...f.specs, [key]: e.target.value } }))}
+                    className="input text-sm"
+                  />
+                </div>
+              ))}
+            </div>
+          </details>
+
+          <div className="flex gap-2 flex-wrap">
+            <button type="submit" className="btn-primary text-sm py-2 px-4 inline-flex items-center gap-1">
+              <Save className="w-4 h-4" /> {editingId ? 'Update' : 'Add Phone'}
+            </button>
+            <button type="button" onClick={cancelEdit} className="btn-secondary text-sm py-2 px-4">Cancel</button>
+          </div>
+        </form>
+      )}
+
+      {/* === INVENTORY LIST === */}
       {loading ? (
-        <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="card p-4 animate-pulse h-16" />)}</div>
+        <div className="card p-12 text-center text-sec-text">Loading inventory...</div>
       ) : filtered.length === 0 ? (
         <div className="card p-12 text-center">
-          <p className="text-5xl mb-3">📦</p>
-          <p className="text-sec-text mb-2">No phone units match.</p>
-          <p className="text-xs text-muted-text">Click "Add Phone" to add a new unit — it will show on the storefront.</p>
+          <Package className="w-12 h-12 mx-auto text-sec-text mb-3" />
+          <p className="text-sec-text mb-2">No phones match your filters</p>
+          <p className="text-xs text-sec-text">Add phones to your inventory or scan an IMEI to find one.</p>
         </div>
       ) : view === 'cards' ? (
-        <div className="space-y-3">
-          {groupedPhones.map(([key, units]) => {
-            const sample = units[0]
-            const inStock = units.filter((u) => u.status === 'in_stock').length
-            const isExpanded = expanded[key]
-            const mrp = sample.mrp || 0
-            const buy = sample.buy_price || 0
-            return (
-              <div key={key} className="card overflow-hidden">
-                <div className="p-4 flex items-center gap-3">
-                  <button onClick={() => setExpanded((e) => ({ ...e, [key]: !e[key] }))} className="btn-ghost p-1 shrink-0">
-                    {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                  </button>
-                  {sample.image_url ? (
-                    <img src={sample.image_url} alt="" className="w-12 h-12 rounded-lg object-cover bg-elev-bg" />
-                  ) : (
-                    <div className="w-12 h-12 rounded-lg bg-elev-bg flex items-center justify-center text-2xl">📱</div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold text-main-text">{sample.brand} {sample.model}</p>
-                      {sample.variant && <span className="badge text-[10px] bg-elev-bg text-sec-text">{sample.variant}</span>}
-                      {sample.is_featured && <span className="badge text-[10px] bg-neon-blue/20 text-neon-blue">Featured</span>}
-                      {sample.is_bestseller && <span className="badge text-[10px] bg-neon-green/20 text-neon-green">Bestseller</span>}
-                    </div>
-                    <p className="text-xs text-sec-text">
-                      {inStock > 0 ? <span className="text-success">{inStock} in stock</span> : <span className="text-danger">Out of stock</span>}
-                      {' · '}
-                      {units.length - inStock} sold · MRP {formatBDT(mrp)} · Buy {formatBDT(buy)}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-muted-text">Profit/unit</p>
-                    <p className="text-sm font-semibold text-neon-green">{formatBDT(mrp - buy)}</p>
-                  </div>
-                </div>
-                {isExpanded && (
-                  <div className="border-t border-border">
-                    <table className="w-full text-sm">
-                      <thead className="bg-elev-bg/50 text-xs text-muted-text uppercase">
-                        <tr>
-                          <th className="px-4 py-2 text-left">IMEI</th>
-                          <th className="px-4 py-2 text-left">Status</th>
-                          <th className="px-4 py-2 text-right">Buy</th>
-                          <th className="px-4 py-2 text-right">MRP</th>
-                          <th className="px-4 py-2 text-right">Cost</th>
-                          <th className="px-4 py-2 text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {units.map((u) => (
-                          <tr key={u.id} className="hover:bg-elev-bg/30">
-                            <td className="px-4 py-2 font-mono text-xs">{u.imei}</td>
-                            <td className="px-4 py-2">
-                              <span className={"badge text-[10px] " + (
-                                u.status === 'in_stock' ? 'bg-success/20 text-success' :
-                                u.status === 'sold' ? 'bg-elev-bg text-sec-text' :
-                                u.status === 'returned' ? 'bg-warning/20 text-warning' :
-                                'bg-error/20 text-error'
-                              )}>{u.status}</span>
-                            </td>
-                            <td className="px-4 py-2 text-right text-xs">{formatBDT(u.buy_price)}</td>
-                            <td className="px-4 py-2 text-right text-xs">{formatBDT(u.mrp)}</td>
-                            <td className="px-4 py-2 text-right text-xs">{formatBDT(u.cost_price)}</td>
-                            <td className="px-4 py-2 text-right">
-                              <div className="flex justify-end gap-1">
-                                {u.status === 'in_stock' && (
-                                  <button onClick={() => setSelling(u)} className="btn-ghost p-1.5 text-neon-green" title="Sell">
-                                    <ShoppingCart className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
-                                <button onClick={() => openEdit(u)} className="btn-ghost p-1.5" title="Edit">
-                                  <Edit2 className="w-3.5 h-3.5" />
-                                </button>
-                                <button onClick={() => del(u)} className="btn-ghost p-1.5 text-danger hover:bg-danger/10" title="Delete">
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map((p) => (
+            <div key={p.id} className="card p-4">
+              <div className="flex items-start gap-3 mb-3">
+                {p.image_url ? (
+                  <img src={p.image_url} alt={p.model} className="w-14 h-14 rounded-lg object-cover bg-surfaceElevated" />
+                ) : (
+                  <div className="w-14 h-14 rounded-lg bg-surfaceElevated flex items-center justify-center text-2xl">📱</div>
                 )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-sec-text">{p.brand}</p>
+                  <p className="font-semibold text-main-text truncate">{p.model}</p>
+                  <p className="text-xs text-sec-text truncate">{p.variant}</p>
+                </div>
+                <span className={`badge text-[10px] ${p.status === 'sold' ? 'bg-error/20 text-error' : p.status === 'reserved' ? 'bg-warning/20 text-warning' : 'bg-success/20 text-success'}`}>
+                  {p.status === 'sold' ? 'Sold' : p.status === 'reserved' ? 'Reserved' : 'In Stock'}
+                </span>
               </div>
-            )
-          })}
+              <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                <div>
+                  <p className="text-sec-text">IMEI</p>
+                  <p className="font-mono text-main-text truncate">{p.imei || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-sec-text">MRP</p>
+                  <p className="font-semibold text-main-text">{formatBDT(p.mrp)}</p>
+                </div>
+              </div>
+              <div className="flex gap-1">
+                {p.status !== 'sold' && (
+                  <button onClick={() => setSelling(p)} className="btn-ghost p-1.5 text-neon-green" title="Sell">
+                    <ShoppingCart className="w-4 h-4" />
+                  </button>
+                )}
+                <button onClick={() => startEdit(p)} className="btn-ghost p-1.5" title="Edit">
+                  <Edit2 className="w-4 h-4" />
+                </button>
+                <button onClick={() => deletePhone(p.id)} className="btn-ghost p-1.5 text-error" title="Delete">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="card overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-elev-bg text-xs uppercase tracking-wider text-muted-text">
-              <tr>
-                <th className="px-4 py-3 text-left">Brand</th>
-                <th className="px-4 py-3 text-left">Model</th>
-                <th className="px-4 py-3 text-left">Variant</th>
-                <th className="px-4 py-3 text-left">IMEI</th>
-                <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-right">Buy</th>
-                <th className="px-4 py-3 text-right">MRP</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-sec-text border-b border-border">
+                <th className="p-3">Brand / Model</th>
+                <th className="p-3">Variant</th>
+                <th className="p-3">IMEI</th>
+                <th className="p-3">MRP</th>
+                <th className="p-3">Status</th>
+                <th className="p-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody>
               {filtered.map((p) => (
-                <tr key={p.id} className="hover:bg-elev-bg/30">
-                  <td className="px-4 py-3 text-sm text-main-text">{p.brand}</td>
-                  <td className="px-4 py-3 text-sm text-main-text">{p.model}</td>
-                  <td className="px-4 py-3 text-sm text-sec-text">{p.variant || '-'}</td>
-                  <td className="px-4 py-3 text-sm font-mono text-xs text-muted-text">{p.imei}</td>
-                  <td className="px-4 py-3">
-                    <span className={"badge text-[10px] " + (
-                      p.status === 'in_stock' ? 'bg-success/20 text-success' :
-                      p.status === 'sold' ? 'bg-elev-bg text-sec-text' :
-                      p.status === 'returned' ? 'bg-warning/20 text-warning' :
-                      'bg-error/20 text-error'
-                    )}>{p.status}</span>
+                <tr key={p.id} className="border-b border-border/50 hover:bg-surfaceElevated/40">
+                  <td className="p-3">
+                    <p className="font-semibold text-main-text">{p.brand} {p.model}</p>
                   </td>
-                  <td className="px-4 py-3 text-right text-xs">{formatBDT(p.buy_price)}</td>
-                  <td className="px-4 py-3 text-right text-xs">{formatBDT(p.mrp)}</td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="p-3 text-sec-text">{p.variant || '—'}</td>
+                  <td className="p-3 font-mono text-xs text-main-text">{p.imei || '—'}</td>
+                  <td className="p-3 font-semibold text-main-text">{formatBDT(p.mrp)}</td>
+                  <td className="p-3">
+                    <span className={`badge text-[10px] ${p.status === 'sold' ? 'bg-error/20 text-error' : p.status === 'reserved' ? 'bg-warning/20 text-warning' : 'bg-success/20 text-success'}`}>
+                      {p.status}
+                    </span>
+                  </td>
+                  <td className="p-3 text-right">
                     <div className="flex justify-end gap-1">
-                      {p.status === 'in_stock' && (
+                      {p.status !== 'sold' && (
                         <button onClick={() => setSelling(p)} className="btn-ghost p-1.5 text-neon-green" title="Sell">
-                          <ShoppingCart className="w-3.5 h-3.5" />
+                          <ShoppingCart className="w-4 h-4" />
                         </button>
                       )}
-                      <button onClick={() => openEdit(p)} className="btn-ghost p-1.5" title="Edit">
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                      <button onClick={() => del(p)} className="btn-ghost p-1.5 text-danger hover:bg-danger/10" title="Delete">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <button onClick={() => startEdit(p)} className="btn-ghost p-1.5"><Edit2 className="w-4 h-4" /></button>
+                      <button onClick={() => deletePhone(p.id)} className="btn-ghost p-1.5 text-error"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </td>
                 </tr>
@@ -738,28 +675,23 @@ export function AdminInventory() {
         </div>
       )}
 
-      {showScanner && <BarcodeScanner onScan={handleScanResult} onClose={() => setShowScanner(false)} title="Scan IMEI barcode" />}
-      {imeiScannerOpen && (
+      {/* === SCANNER MODAL === */}
+      {showScanner && (
         <BarcodeScanner
+          onScan={handleScanResult}
+          onClose={() => setShowScanner(false)}
           title="Scan IMEI barcode"
-          onScan={(code) => {
-            const cleanCode = code.replace(/\D/g, '')
-            setImeiList((list) => {
-              const idx = list.findIndex((i) => !i.trim())
-              if (idx >= 0) {
-                const copy = [...list]
-                copy[idx] = cleanCode
-                return copy
-              }
-              return [...list, cleanCode]
-            })
-            setImeiScannerOpen(false)
-            showToast('IMEI added — keep scanning or save', 'success')
-          }}
-          onClose={() => setImeiScannerOpen(false)}
         />
       )}
-      {selling && <SellPhoneModal phone={selling} onSuccess={handleSellSuccess} onCancel={() => setSelling(null)} />}
+
+      {/* === SELL MODAL === */}
+      {selling && (
+        <SellPhoneModal
+          phone={selling}
+          onCancel={() => setSelling(null)}
+          onSuccess={handleSellSuccess}
+        />
+      )}
     </AdminLayout>
   )
 }
