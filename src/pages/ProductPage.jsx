@@ -38,7 +38,27 @@ function groupSpecs(fullSpecs) {
   }).filter((g) => g.rows.length > 0)
 }
 
+const SPEC_LABELS = {
+  display: 'Display',
+  refresh_rate_hz: 'Refresh Rate',
+  chip: 'Processor',
+  os: 'Operating System',
+  ram_gb: 'RAM',
+  storage_gb: 'Storage',
+  rear_camera: 'Rear Camera',
+  front_camera: 'Front Camera',
+  video_4k: 'Video',
+  battery_mah: 'Battery',
+  charging_w: 'Charging',
+  wireless_charging_w: 'Wireless Charging',
+  weight_g: 'Weight',
+  ip_rating: 'IP Rating',
+  five_g: '5G',
+  colors: 'Colors',
+}
+
 function prettyKey(k) {
+  if (SPEC_LABELS[k]) return SPEC_LABELS[k]
   return k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
