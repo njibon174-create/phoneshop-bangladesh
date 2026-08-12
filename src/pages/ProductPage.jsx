@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { ChevronRight, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, Check, X, Cpu, Battery, Camera, HardDrive, Smartphone, CheckCircle2 } from 'lucide-react'
 import { useCart } from '../lib/cart'
+import { useWishlist } from '../lib/wishlist'
 import { PhoneCard } from '../components/ui/PhoneCard'
 import { fetchProductBySlug, fetchProductsByBrand } from '../lib/queries'
 
@@ -44,6 +45,7 @@ function prettyKey(k) {
 export function ProductPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
+  const { has: inWishlist, toggle: toggleWish } = useWishlist()
   const [product, setProduct] = useState(null)
   const [related, setRelated] = useState([])
   const [loading, setLoading] = useState(true)
@@ -170,9 +172,20 @@ export function ProductPage() {
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
               <AddToCartButton product={product} />
-              <button className="btn-secondary py-3.5 px-5 flex items-center justify-center gap-2">
-                <Heart className="w-5 h-5" />
-                <span className="hidden sm:inline">Wishlist</span>
+              <button
+                onClick={() => toggleWish({
+                  id: product.id,
+                  slug: product.slug,
+                  name: product.name,
+                  variant: product.variant,
+                  brand: product.brand_name,
+                  image: product.primary_image_url,
+                  price_bdt: product.price_bdt,
+                })}
+                className={`btn-secondary py-3.5 px-5 flex items-center justify-center gap-2 ${inWishlist(product.slug) ? 'border-danger text-danger' : ''}`}
+              >
+                <Heart className={`w-5 h-5 ${inWishlist(product.slug) ? 'fill-current' : ''}`} />
+                <span className="hidden sm:inline">{inWishlist(product.slug) ? 'In Wishlist' : 'Wishlist'}</span>
               </button>
               <button onClick={share} className="btn-secondary py-3.5 px-5 flex items-center justify-center gap-2">
                 {copied ? <Check className="w-5 h-5 text-success" /> : <Share2 className="w-5 h-5" />}
