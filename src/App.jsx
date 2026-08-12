@@ -5,8 +5,21 @@ import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-do
 function ScrollToTop() {
   const { pathname } = useLocation()
   useEffect(() => {
-    // Use smooth scroll behavior
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    // Scroll the window — works on most browsers
+    try { window.scrollTo(0, 0) } catch {}
+    // Also scroll any scrollable inner container (some layouts use overflow:auto)
+    try { document.documentElement.scrollTop = 0 } catch {}
+    try { document.body.scrollTop = 0 } catch {}
+    // Find any element with overflow:auto/scroll and reset it
+    try {
+      const elements = document.querySelectorAll('*')
+      elements.forEach((el) => {
+        const style = window.getComputedStyle(el)
+        if ((style.overflowY === 'auto' || style.overflowY === 'scroll') && el.scrollTop > 0) {
+          el.scrollTop = 0
+        }
+      })
+    } catch {}
   }, [pathname])
   return null
 }
@@ -105,6 +118,7 @@ function AdminGate() {
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <CartProvider>
         <AdminProvider>
           <RouteProgress />
