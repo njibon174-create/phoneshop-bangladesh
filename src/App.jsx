@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { RouteProgress } from './components/ui/RouteProgress'
 import { Header } from './components/layout/Header'
 import { Footer } from './components/layout/Footer'
 import { ErrorBoundary } from './components/ui/ErrorBoundary'
@@ -103,6 +104,7 @@ export default function App() {
 function StorefrontLayout({ children }) {
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <RouteProgress />
       <Header />
       <main className="flex-1">
         <ErrorBoundary>{children}</ErrorBoundary>
