@@ -159,8 +159,8 @@ function CreditCard({ credit, onAddPayment }) {
                     <p className="text-sm font-medium text-[#E5E7EB]">
                       +৳{formatCurrency(p.amount)}
                     </p>
-                    {p.note && (
-                      <p className="text-xs text-[#9CA3AF]">{p.note}</p>
+                    {p.notes && (
+                      <p className="text-xs text-[#9CA3AF]">{p.notes}</p>
                     )}
                   </div>
                   <p className="text-xs text-[#9CA3AF]">{formatDate(p.paid_at)}</p>
@@ -198,7 +198,7 @@ export default function BakiLedgerPage() {
         paid_amount,
         remaining,
         status,
-        last_paid_at,
+        created_at,
         sale:sales(
           id,
           buyer_name,
@@ -214,10 +214,10 @@ export default function BakiLedgerPage() {
           id,
           amount,
           paid_at,
-          note
+          notes
         )
       `)
-      .order('last_paid_at', { ascending: false })
+      .order('created_at', { ascending: false })
 
     if (error) {
       console.error('BakiLedger fetch error:', JSON.stringify(error))
@@ -226,7 +226,7 @@ export default function BakiLedgerPage() {
       const { data: fallback } = await supabase
         .from('credits')
         .select('*')
-        .order('last_paid_at', { ascending: false })
+        .order('created_at', { ascending: false })
       setCredits(fallback || [])
     } else {
       setCredits(data || [])

@@ -100,18 +100,12 @@ function EditHistorySection({ history }) {
           {history.map(h => (
             <div key={h.id} className="flex items-center justify-between rounded-lg bg-[#1E2A3A] border border-[#1E3A5F] px-3 py-2">
               <div>
-                {h.old_amount !== h.new_amount && (
+                {h.old_amount !== h.new_amount ? (
                   <p className="text-sm text-[#E5E7EB]">
                     ৳{formatCurrency(h.old_amount)} → <span className="font-medium text-[#E5E7EB]">৳{formatCurrency(h.new_amount)}</span>
                   </p>
-                )}
-                {h.old_note !== h.new_note && (
-                  <p className="text-xs text-[#9CA3AF]">
-                    {h.old_note || '—'} → <span className="text-[#9CA3AF]">{h.new_note || '—'}</span>
-                  </p>
-                )}
-                {h.old_amount === h.new_amount && h.old_note === h.new_note && (
-                  <p className="text-xs text-[#9CA3AF] italic">No visible changes</p>
+                ) : (
+                  <p className="text-xs text-[#9CA3AF] italic">{h.reason || 'Edited'}</p>
                 )}
               </div>
               <p className="text-xs text-[#9CA3AF] whitespace-nowrap ml-3">{formatDateTime(h.edited_at)}</p>
@@ -212,13 +206,12 @@ function TransactionForm({ tx, onSuccess, onCancel }) {
 
     let error
     if (isEdit) {
-      // Log edit before updating
+      // Log edit before updating (only log columns that exist)
       await supabase.from('cash_transaction_edits').insert({
         transaction_id: tx.id,
         old_amount: tx.amount,
         new_amount: Number(amount),
-        old_note: tx.note || null,
-        new_note: note.trim() || null,
+        reason: `Edit: ${formatCurrency(tx.amount)} → ${formatCurrency(Number(amount))}` + (note.trim() ? ` | ${note.trim()}` : ''),
       })
 
       const { error: err } = await supabase

@@ -299,7 +299,7 @@ export default function ReportsPage() {
 
     const { data: allCredits } = await supabase
       .from('credits')
-      .select('id, total_due, remaining, status, last_payment_date, credit_payments(amount, payment_date)')
+      .select('id, total_due, remaining, status, credit_payments(amount, paid_at)')
 
     const { data: allTx } = await supabase
       .from('cash_transactions')
@@ -332,7 +332,7 @@ export default function ReportsPage() {
     function calcBaki(credits) {
       if (!credits) return { newBakiCount: 0, newBakiAmount: 0, clearedAmount: 0, outstanding: 0 }
       const clearedAmount = (credits || []).flatMap(c => c.credit_payments || [])
-        .filter(p => p.payment_date >= start && p.payment_date <= end)
+        .filter(p => p.paid_at >= start && p.paid_at <= end)
         .reduce((sum, p) => sum + Number(p.amount || 0), 0)
       const outstanding = (credits || []).filter(c => c.status !== 'cleared')
         .reduce((sum, c) => sum + Number(c.remaining || 0), 0)

@@ -54,7 +54,7 @@ export default function AddPayment({ credit, onSuccess, onCancel }) {
         paid_amount: (Number(credit.paid_amount) || 0) + paymentAmt,
         remaining: newRemaining,
         status: newStatus,
-        last_paid_at: new Date().toISOString(),
+        // last_paid_at omitted — column doesn't exist; updated_at is set automatically by Supabase
       })
       .eq('id', credit.id)
 
