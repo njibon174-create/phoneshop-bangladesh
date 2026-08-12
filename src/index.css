@@ -17,6 +17,23 @@
   ::-webkit-scrollbar-thumb:hover { background: #00D4FF66; }
 }
 
+/* Legacy storefront compatibility — original classes used before PhoneLedger rebuild */
+@layer utilities {
+  .section-container { @apply max-w-7xl mx-auto px-4 sm:px-6; }
+  .btn-primary { @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed; background: linear-gradient(135deg, #00FF88, #00D4FF); color: #0A0E1A; box-shadow: 0 0 16px rgba(0, 255, 136, 0.3); }
+  .btn-secondary { @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all; background-color: #1E2A3A; color: #F0F8FF; border: 1px solid #1E3A5F; }
+  .btn-ghost { @apply inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm transition-all; color: #7EB8DA; }
+  .btn-ghost:hover { background-color: #1E2A3A; color: #00FF88; }
+  .input { @apply w-full px-3 py-2 rounded-lg border text-sm outline-none; background-color: #1E2A3A; color: #F0F8FF; border-color: #1E3A5F; }
+  .input:focus { border-color: #00FF88; box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.3); }
+  .label { @apply block text-xs font-medium mb-1; color: #7EB8DA; }
+  .card { @apply rounded-xl; background-color: #111827; border: 1px solid #1E3A5F; }
+  .stat-card { @apply rounded-xl px-5 py-4 flex flex-col gap-1; background: linear-gradient(135deg, #111827, #1E2A3A); border: 1px solid #1E3A5F; }
+  .stat-label { @apply text-xs font-medium uppercase tracking-wide; color: #7EB8DA; }
+  .stat-value { @apply text-2xl font-bold; color: #00FF88; }
+  .badge { @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium; }
+}
+
 @layer components {
   .btn {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed;

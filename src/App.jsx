@@ -9,82 +9,78 @@ import { RouteProgress } from './components/ui/RouteProgress'
 import { Shield } from 'lucide-react'
 import './index.css'
 
-// Eagerly loaded storefront pages
+// Eagerly loaded storefront pages — these render above the fold
 import { Home } from './pages/Home'
 import { BrandsPage } from './pages/BrandsPage'
 import { BrandPage } from './pages/BrandPage'
 import { ProductPage } from './pages/ProductPage'
 import { CartPage } from './pages/CartPage'
+import { Header } from './components/layout/Header'
+import { Footer } from './components/layout/Footer'
 
-// Lazy-loaded storefront
-const SearchPage = lazy(() => import('./pages/SearchPage').then((m) => ({ default: m.SearchPage })))
-const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then((m) => ({ default: m.CheckoutPage })))
-const OrderConfirmationPage = lazy(() => import('./pages/OrderConfirmationPage').then((m) => ({ default: m.OrderConfirmationPage })))
-const OrderTrackingPage = lazy(() => import('./pages/OrderTrackingPage').then((m) => ({ default: m.OrderTrackingPage })))
-const WishlistPage = lazy(() => import('./pages/WishlistPage').then((m) => ({ default: m.WishlistPage })))
-const ComparePage = lazy(() => import('./pages/ComparePage').then((m) => ({ default: m.ComparePage })))
-const DealsPage = lazy(() => import('./pages/DealsPage').then((m) => ({ default: m.DealsPage })))
-const NewArrivalsPage = lazy(() => import('./pages/NewArrivalsPage').then((m) => ({ default: m.NewArrivalsPage })))
-const SupportPage = lazy(() => import('./pages/SupportPage').then((m) => ({ default: m.SupportPage })))
-const AboutPage = lazy(() => import('./pages/AboutPage').then((m) => ({ default: m.AboutPage })))
-const DeliveryPage = lazy(() => import('./pages/delivery').then((m) => ({ default: m.DeliveryPage })))
-const WarrantyPage = lazy(() => import('./pages/legal').then((m) => ({ default: m.WarrantyPage })))
-const ReturnsPage = lazy(() => import('./pages/legal').then((m) => ({ default: m.ReturnsPage })))
-const PrivacyPage = lazy(() => import('./pages/legal').then((m) => ({ default: m.PrivacyPage })))
-const TermsPage = lazy(() => import('./pages/legal').then((m) => ({ default: m.TermsPage })))
-const CareersPage = lazy(() => import('./pages/legal').then((m) => ({ default: m.CareersPage })))
+// Lazy-loaded storefront — all use named exports so we look up the named
+// export from the module instead of relying on a default.
+function lazyNamed(loader, exportName) {
+  return lazy(async () => {
+    const m = await loader()
+    const C = m[exportName]
+    if (!C) throw new Error(`Export "${exportName}" not found in lazy-loaded module`)
+    return { default: C }
+  })
+}
 
-// Storefront layout wrapper
+const SearchPage = lazyNamed(() => import('./pages/SearchPage'), 'SearchPage')
+const CheckoutPage = lazyNamed(() => import('./pages/CheckoutPage'), 'CheckoutPage')
+const OrderConfirmationPage = lazyNamed(() => import('./pages/OrderConfirmationPage'), 'OrderConfirmationPage')
+const OrderTrackingPage = lazyNamed(() => import('./pages/OrderTrackingPage'), 'OrderTrackingPage')
+const WishlistPage = lazyNamed(() => import('./pages/WishlistPage'), 'WishlistPage')
+const ComparePage = lazyNamed(() => import('./pages/ComparePage'), 'ComparePage')
+const DealsPage = lazyNamed(() => import('./pages/DealsPage'), 'DealsPage')
+const NewArrivalsPage = lazyNamed(() => import('./pages/NewArrivalsPage'), 'NewArrivalsPage')
+const SupportPage = lazyNamed(() => import('./pages/SupportPage'), 'SupportPage')
+const AboutPage = lazyNamed(() => import('./pages/AboutPage'), 'AboutPage')
+const DeliveryPage = lazyNamed(() => import('./pages/delivery'), 'DeliveryPage')
+const WarrantyPage = lazyNamed(() => import('./pages/legal'), 'WarrantyPage')
+const ReturnsPage = lazyNamed(() => import('./pages/legal'), 'ReturnsPage')
+const PrivacyPage = lazyNamed(() => import('./pages/legal'), 'PrivacyPage')
+const TermsPage = lazyNamed(() => import('./pages/legal'), 'TermsPage')
+const CareersPage = lazyNamed(() => import('./pages/legal'), 'CareersPage')
+
+// Storefront layout wrapper — full header + footer
 function StorefrontLayout({ children }) {
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <HeaderLite />
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#0A0E1A' }}>
+      <Header />
       <main className="flex-1">
         <ErrorBoundary>
-          <Suspense fallback={<div className="section-container py-16 text-center text-sec-text">Loading…</div>}>
+          <Suspense fallback={
+            <div className="flex items-center justify-center py-32">
+              <div className="text-center">
+                <div className="w-12 h-12 mx-auto rounded-2xl animate-pulse" style={{ background: 'linear-gradient(135deg, #00FF88, #00D4FF)' }} />
+                <p className="mt-4 text-sm" style={{ color: '#7EB8DA' }}>Loading…</p>
+              </div>
+            </div>
+          }>
             {children}
           </Suspense>
         </ErrorBoundary>
       </main>
-      <FooterLite />
+      <Footer />
     </div>
-  )
-}
-
-// Lightweight header for lazy routes
-function HeaderLite() {
-  return (
-    <header className="border-b border-border bg-card-bg sticky top-0 z-30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #00FF88, #00D4FF)' }}>
-            <Shield className="w-4 h-4 text-black" />
-          </div>
-          <span className="font-bold text-main-text">PhoneShop BD</span>
-        </Link>
-        <Link to="/admin" className="text-xs text-sec-text hover:text-neon-blue">Admin</Link>
-      </div>
-    </header>
-  )
-}
-
-function FooterLite() {
-  return (
-    <footer className="border-t border-border bg-card-bg py-6 mt-auto">
-      <div className="max-w-7xl mx-auto px-4 text-center text-xs text-muted-text">
-        © 2026 PhoneShop BD. All rights reserved.
-      </div>
-    </footer>
   )
 }
 
 function NotFound() {
   return (
     <StorefrontLayout>
-      <div className="section-container py-16 text-center">
-        <p className="text-5xl mb-4">🤷</p>
-        <h1 className="text-2xl font-bold text-main-text mb-2">Page not found</h1>
-        <Link to="/" className="btn-primary inline-flex items-center gap-2 mt-4">Back to Home</Link>
+      <div className="max-w-7xl mx-auto px-4 py-20 text-center">
+        <p className="text-7xl mb-4">🔍</p>
+        <h1 className="text-3xl font-bold mb-2" style={{ color: '#F0F8FF' }}>Page not found</h1>
+        <p style={{ color: '#7EB8DA' }} className="mb-6">The page you're looking for doesn't exist.</p>
+        <Link to="/" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-black" style={{ background: 'linear-gradient(135deg, #00FF88, #00D4FF)' }}>
+          <Shield className="w-4 h-4" />
+          Back to Home
+        </Link>
       </div>
     </StorefrontLayout>
   )
