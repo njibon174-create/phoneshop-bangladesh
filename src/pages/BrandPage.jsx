@@ -117,7 +117,7 @@ export function BrandPage() {
                     name: p.name,
                     variant: p.variant,
                     price: formatPrice(p.price_bdt),
-                    comparePrice: p.compare_price_bdt ? formatPrice(p.compare_price_bdt) : null,
+                    comparePrice: p.compare_at_price ? formatPrice(p.compare_at_price) : null,
                     image: p.primary_image_url,
                     slug: p.slug,
                     stockStatus: p.stock_status,

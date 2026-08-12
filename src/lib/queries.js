@@ -120,19 +120,45 @@ export async function createOrder({ customer, items, deliveryMethod = 'home' }) 
   if (!items?.length) throw new Error('No items in order')
 
   // Fetch current prices from storefront_products view
-  const slugs = items.map((i) => i.slug)
+  // Be tolerant: if a cart item has a UUID slug (a phone id), try to find
+  // its parent product via the phones table.
+  const slugs = items.map((i) => i.slug).filter(Boolean)
+  const isUUID = (s) => typeof s === 'string' && /^[0-9a-f-]{36}$/i.test(s)
+  const uuidSlugs = items.filter((i) => isUUID(i.slug)).map((i) => i.slug)
+  const namedSlugs = items.filter((i) => !isUUID(i.slug)).map((i) => i.slug)
+
   const { data: products, error: prodError } = await supabase
     .from('storefront_products')
     .select('id, name, model, variant, price_bdt, brand, slug, stock_count, cheapest_unit_id')
-    .in('slug', slugs)
+    .in('slug', [...new Set([...slugs, ...namedSlugs])])
   if (prodError) throw prodError
 
   const priceMap = new Map(products.map((p) => [p.slug, p]))
 
+  // Fallback: if any cart item used a phone id, look up the phone → store product
+  if (uuidSlugs.length) {
+    const { data: phones } = await supabase
+      .from('phones')
+      .select('id, brand, model, variant, mrp, status')
+      .in('id', uuidSlugs)
+    if (phones) {
+      for (const ph of phones) {
+        const match = (products || []).find(p =>
+          p.brand === ph.brand && p.model === ph.model && p.variant === ph.variant
+        )
+        if (match) {
+          priceMap.set(ph.id, { ...match, _from_phone_id: ph.id })
+        }
+      }
+    }
+  }
+
   let subtotal = 0
   const orderItems = items.map((item) => {
     const product = priceMap.get(item.slug)
-    if (!product) throw new Error(`Product not found`)
+    if (!product) {
+      throw new Error(`Product not found in storefront. Try clearing your cart and re-adding the item. (slug: ${item.slug})`)
+    }
     if (product.stock_count <= 0) throw new Error(`${product.name} is out of stock`)
     if (item.quantity > product.stock_count) throw new Error(`Only ${product.stock_count} units of ${product.name} available`)
     const unitPrice = product.price_bdt

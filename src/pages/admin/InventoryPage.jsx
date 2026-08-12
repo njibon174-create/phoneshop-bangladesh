@@ -76,7 +76,7 @@ export default function InventoryPage() {
   const [phones, setPhones] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('in_stock')
   const [brandFilter, setBrandFilter] = useState('all')
   const [editPhone, setEditPhone] = useState(null)
   const [sellPhone, setSellPhone] = useState(null)
@@ -161,7 +161,7 @@ export default function InventoryPage() {
   const totalInStock     = inStock.length
   const totalInvestment  = inStock.reduce((s, p) => s + Number(p.buy_price || 0), 0)
   const isEmpty          = !loading && filtered.length === 0
-  const isSearchActive   = search || statusFilter !== 'all' || brandFilter !== 'all'
+  const isSearchActive   = search || statusFilter !== 'in_stock' || brandFilter !== 'all'
 
   return (
     <div className="space-y-5">

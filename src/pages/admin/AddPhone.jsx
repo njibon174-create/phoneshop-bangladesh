@@ -15,6 +15,28 @@ export default function AddPhone({ onSuccess, onCancel }) {
   const [customBrand, setCustomBrand] = useState('')
   const [model, setModel] = useState('')
   const [variant, setVariant] = useState('Standard')
+  // Phone details — show in front shop product page
+  const [shortDesc, setShortDesc] = useState('')
+  const [longDesc, setLongDesc] = useState('')
+  const [colors, setColors] = useState('')
+  const [specs, setSpecs] = useState({
+    display: '',
+    chip: '',
+    os: '',
+    ram_gb: '',
+    storage_gb: '',
+    rear_camera: '',
+    front_camera: '',
+    battery_mah: '',
+    charging_w: '',
+    wireless_charging_w: '',
+    refresh_rate_hz: '',
+    weight_g: '',
+    ip_rating: '',
+    '5g': '',
+  })
+  const [compareAtPrice, setCompareAtPrice] = useState('')
+  const [condition, setCondition] = useState('new') // 'new' | 'refurbished'
   // MULTI-IMEI: one row per unit, plus bulk paste & scan
   const [imeiList, setImeiList] = useState([''])
   const [buyPrice, setBuyPrice] = useState('')
@@ -62,16 +84,31 @@ export default function AddPhone({ onSuccess, onCancel }) {
     // Build rows — one per IMEI; or one model-only row if none entered.
     // Adding to inventory automatically makes the phone visible in the front shop.
     const validImeis = imeiList.map(i => i.trim()).filter(Boolean)
+    // Build the specs object — only use fields the user filled in
+    const cleanSpecs = {}
+    for (const [k, v] of Object.entries(specs)) {
+      const trimmed = (v || '').toString().trim()
+      if (trimmed) cleanSpecs[k] = trimmed
+    }
+    if (colors.trim()) cleanSpecs.colors = colors.trim()
+    if (shortDesc.trim()) cleanSpecs.short_desc = shortDesc.trim()
+    if (longDesc.trim()) cleanSpecs.long_desc = longDesc.trim()
+
     const baseRow = {
       brand: finalBrand,
       model: model.trim(),
       variant: variant.trim() || 'Standard',
       buy_price: Number(buyPrice),
       mrp: Number(mrp),
+      compare_at_price: compareAtPrice ? Number(compareAtPrice) : null,
       warranty_months: Number(warranty) || 12,
       image_url: imageUrl.trim() || null,
       is_featured: isFeatured,
       is_bestseller: isBestseller,
+      short_desc: shortDesc.trim() || null,
+      long_desc: longDesc.trim() || null,
+      specs: Object.keys(cleanSpecs).length ? cleanSpecs : {},
+      condition: condition,
       status: 'in_stock',
     }
     const rows = validImeis.length > 0
@@ -96,8 +133,14 @@ export default function AddPhone({ onSuccess, onCancel }) {
     })
     // Reset form
     setBrand(''); setCustomBrand(''); setModel(''); setVariant('Standard')
-    setImeiList(['']); setBuyPrice(''); setMrp(''); setWarranty('12')
+    setImeiList(['']); setBuyPrice(''); setMrp(''); setCompareAtPrice(''); setWarranty('12')
     setImageUrl(''); setIsFeatured(false); setIsBestseller(false)
+    setShortDesc(''); setLongDesc(''); setColors(''); setCondition('new')
+    setSpecs({
+      display: '', chip: '', os: '', ram_gb: '', storage_gb: '',
+      rear_camera: '', front_camera: '', battery_mah: '', charging_w: '',
+      wireless_charging_w: '', refresh_rate_hz: '', weight_g: '', ip_rating: '', '5g': '',
+    })
     setTimeout(() => onSuccess(), 1500)
   }
 
@@ -254,10 +297,111 @@ export default function AddPhone({ onSuccess, onCancel }) {
         </div>
       </div>
 
+      {/* ── Phone Details (front shop product page) ─────────── */}
+      <div className="rounded-xl bg-elev-bg border border-border p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-wider text-main-text">📋 Phone Details</p>
+          <p className="text-[10px] text-muted-text">These appear in the front shop product page</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label className="label">Short Description</label>
+            <input type="text" className="input" placeholder="e.g. Apple flagship with A17 Pro chip" value={shortDesc} onChange={e => setShortDesc(e.target.value)} />
+          </div>
+          <div>
+            <label className="label">Colors (optional)</label>
+            <input type="text" className="input" placeholder="e.g. Black, Blue, Silver" value={colors} onChange={e => setColors(e.target.value)} />
+          </div>
+        </div>
+
+        <div>
+          <label className="label">Long Description</label>
+          <textarea className="input min-h-[80px] resize-y" placeholder="Detailed description shown on the product page" value={longDesc} onChange={e => setLongDesc(e.target.value)} />
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div>
+            <label className="label">Display</label>
+            <input type="text" className="input" placeholder='e.g. 6.7" OLED 120Hz' value={specs.display} onChange={e => setSpecs(s => ({ ...s, display: e.target.value }))} />
+          </div>
+          <div>
+            <label className="label">Chip / Processor</label>
+            <input type="text" className="input" placeholder="e.g. Apple A17 Pro" value={specs.chip} onChange={e => setSpecs(s => ({ ...s, chip: e.target.value }))} />
+          </div>
+          <div>
+            <label className="label">OS</label>
+            <input type="text" className="input" placeholder="e.g. iOS 17" value={specs.os} onChange={e => setSpecs(s => ({ ...s, os: e.target.value }))} />
+          </div>
+          <div>
+            <label className="label">RAM (GB)</label>
+            <input type="text" className="input" placeholder="e.g. 8" value={specs.ram_gb} onChange={e => setSpecs(s => ({ ...s, ram_gb: e.target.value }))} />
+          </div>
+          <div>
+            <label className="label">Storage (GB)</label>
+            <input type="text" className="input" placeholder="e.g. 256" value={specs.storage_gb} onChange={e => setSpecs(s => ({ ...s, storage_gb: e.target.value }))} />
+          </div>
+          <div>
+            <label className="label">5G</label>
+            <select className="input" value={specs['5g']} onChange={e => setSpecs(s => ({ ...s, '5g': e.target.value }))}>
+              <option value="">—</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+          <div>
+            <label className="label">Rear Camera</label>
+            <input type="text" className="input" placeholder="e.g. 48MP + 12MP + 12MP" value={specs.rear_camera} onChange={e => setSpecs(s => ({ ...s, rear_camera: e.target.value }))} />
+          </div>
+          <div>
+            <label className="label">Front Camera</label>
+            <input type="text" className="input" placeholder="e.g. 12MP" value={specs.front_camera} onChange={e => setSpecs(s => ({ ...s, front_camera: e.target.value }))} />
+          </div>
+          <div>
+            <label className="label">Battery (mAh)</label>
+            <input type="text" className="input" placeholder="e.g. 4422" value={specs.battery_mah} onChange={e => setSpecs(s => ({ ...s, battery_mah: e.target.value }))} />
+          </div>
+          <div>
+            <label className="label">Charging (W)</label>
+            <input type="text" className="input" placeholder="e.g. 27" value={specs.charging_w} onChange={e => setSpecs(s => ({ ...s, charging_w: e.target.value }))} />
+          </div>
+          <div>
+            <label className="label">Wireless Chg (W)</label>
+            <input type="text" className="input" placeholder="e.g. 15" value={specs.wireless_charging_w} onChange={e => setSpecs(s => ({ ...s, wireless_charging_w: e.target.value }))} />
+          </div>
+          <div>
+            <label className="label">Refresh Rate (Hz)</label>
+            <input type="text" className="input" placeholder="e.g. 120" value={specs.refresh_rate_hz} onChange={e => setSpecs(s => ({ ...s, refresh_rate_hz: e.target.value }))} />
+          </div>
+          <div>
+            <label className="label">Weight (g)</label>
+            <input type="text" className="input" placeholder="e.g. 221" value={specs.weight_g} onChange={e => setSpecs(s => ({ ...s, weight_g: e.target.value }))} />
+          </div>
+          <div>
+            <label className="label">IP Rating</label>
+            <input type="text" className="input" placeholder="e.g. IP68" value={specs.ip_rating} onChange={e => setSpecs(s => ({ ...s, ip_rating: e.target.value }))} />
+          </div>
+        </div>
+      </div>
+
       {/* Image URL */}
       <div>
         <label className="label">Image URL (front shop)</label>
         <input type="text" className="input" placeholder="https://..." value={imageUrl} onChange={e => setImageUrl(e.target.value)} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label className="label">Compare-at Price (৳)</label>
+          <input type="number" className="input" placeholder="Optional strikethrough price" min="0" value={compareAtPrice} onChange={e => setCompareAtPrice(e.target.value)} />
+        </div>
+        <div>
+          <label className="label">Condition</label>
+          <select className="input" value={condition} onChange={e => setCondition(e.target.value)}>
+            <option value="new">New</option>
+            <option value="refurbished">Refurbished</option>
+          </select>
+        </div>
       </div>
 
       <div className="flex items-center gap-4">

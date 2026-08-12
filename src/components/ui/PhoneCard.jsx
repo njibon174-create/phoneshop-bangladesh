@@ -12,7 +12,14 @@ export const PhoneCard = memo(function PhoneCard({ phone }) {
   const { has: inWishlist, toggle: toggleWish } = useWishlist()
   const [added, setAdded] = useState(false)
 
+  // Use the storefront slug (matches storefront_products.slug). If
+  // missing, fall back to id (this happens when a card is rendered from
+  // data that doesn't have a slug — e.g. the admin inventory tab).
   const slug = phone.slug || phone.id
+  if (!phone.slug && typeof console !== 'undefined') {
+    // Dev hint: silently log once per phone.
+    console.warn('[PhoneCard] Missing phone.slug — falling back to id.', phone)
+  }
   const isInCompare = compareHas(slug)
   const isInWish = inWishlist(slug)
   const productHref = `/product/${slug}`
