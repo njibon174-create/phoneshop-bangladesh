@@ -163,7 +163,10 @@ export async function createOrder({ customer, items, deliveryMethod = 'home' }) 
   const orderItems = validItems.map((item) => {
     const product = priceMap.get(item.slug)
     if (!product) {
-      throw new Error(`Product not found in storefront. Try clearing your cart and re-adding the item. (slug: ${item.slug})`)
+      // Better hint: show the product name (not just the slug) so the user
+      // knows which item to remove from the cart.
+      const name = item.name || item.slug || 'unknown'
+      throw new Error(`"${name}" is not available in the storefront. Please remove it from your cart and re-add it from the homepage.`)
     }
     if (product.stock_count <= 0) throw new Error(`${product.name} is out of stock`)
     if (item.quantity > product.stock_count) throw new Error(`Only ${product.stock_count} units of ${product.name} available`)

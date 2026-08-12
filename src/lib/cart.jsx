@@ -12,7 +12,18 @@ function loadCart() {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return []
     const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : []
+    if (!Array.isArray(parsed)) return []
+    // Filter out invalid items (no slug, no name, no quantity) — these
+    // can't be ordered and would otherwise break createOrder.
+    const filtered = parsed.filter((it) => it && it.slug && it.name && it.quantity > 0)
+    if (filtered.length !== parsed.length) {
+      // Persist the cleaned cart so we don't trigger the error again.
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered)) } catch {}
+      if (typeof console !== 'undefined') {
+        console.warn(`[cart] Removed ${parsed.length - filtered.length} invalid item(s) from cart`)
+      }
+    }
+    return filtered
   } catch {
     return []
   }
