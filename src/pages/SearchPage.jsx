@@ -1,3 +1,4 @@
+import { BackButton } from '../components/ui/BackButton'
 import { useEffect, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { Search as SearchIcon, ChevronRight } from 'lucide-react'
@@ -29,7 +30,7 @@ export function SearchPage() {
   }
 
   return (
-    <main className="section-container py-8">
+    <main className="section-container py-8"><div className="mb-4"><BackButton /></div>
       <nav className="flex items-center gap-1 text-sm text-textSubtle mb-4">
         <Link to="/" className="hover:text-accent">Home</Link>
         <ChevronRight className="w-3 h-3" />

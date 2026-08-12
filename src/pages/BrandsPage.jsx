@@ -1,6 +1,7 @@
+import { BackButton } from '../components/ui/BackButton'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Smartphone } from 'lucide-react'
+import { Smartphone, ChevronLeft } from 'lucide-react'
 import { fetchBrands } from '../lib/queries'
 
 
@@ -22,6 +23,14 @@ export function BrandsPage() {
 
   return (
     <main className="section-container py-8">
+      <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
+        <nav className="flex items-center gap-1 text-sm text-textSubtle">
+          <Link to="/" className="hover:text-accent">Home</Link>
+          <ChevronRight className="w-3 h-3" />
+          <span className="text-text">All Brands</span>
+        </nav>
+<BackButton />
+      </div>
       <div className="mb-8">
         <h1 className="text-4xl sm:text-5xl font-bold text-text mb-2">All Brands</h1>
         <p className="text-textMuted">Browse phones from all the brands we carry at PhoneShop BD.</p>

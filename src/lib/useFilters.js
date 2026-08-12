@@ -111,12 +111,14 @@ export function useProductFilters() {
   return { products, loading, error, totalCount, filters, setFilter, clearAll }
 }
 
-// Helpers — extract RAM/storage from full_specs JSONB
+// Helpers — extract RAM/storage from specs JSONB (the column from the view)
 function matchRam(p, target) {
-  const ram = p.full_specs?.ram_gb
+  const specs = p.specs || p.full_specs || {}
+  const ram = specs.ram_gb
   return Number(ram) === target
 }
 function matchStorage(p, target) {
-  const storage = p.full_specs?.storage_gb
+  const specs = p.specs || p.full_specs || {}
+  const storage = specs.storage_gb
   return Number(storage) === target
 }

@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { Minus, Plus, Trash2, ShoppingBag, ChevronRight, ArrowRight, Truck, Store } from 'lucide-react'
 import { useCart, formatPrice } from '../lib/cart'
+import { BackButton } from '../components/ui/BackButton'
 
 export function CartPage() {
   const { items, setQuantity, remove, subtotal, SHIPPING_HOME, SHIPPING_PICKUP } = useCart()
@@ -25,6 +26,7 @@ export function CartPage() {
 
   return (
     <main className="section-container py-8">
+      <div className="mb-4"><BackButton /></div>
       <h1 className="text-3xl font-bold text-main-text mb-6">Your Cart ({items.length})</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">

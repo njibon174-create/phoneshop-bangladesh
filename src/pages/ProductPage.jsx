@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ChevronRight, ChevronLeft, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, Check, X, Cpu, Battery, Camera, HardDrive, Smartphone, CheckCircle2 } from 'lucide-react'
+import { ChevronRight, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, Check, X, Cpu, Battery, Camera, HardDrive, Smartphone, CheckCircle2 } from 'lucide-react'
 import { useCart } from '../lib/cart'
+import { BackButton } from '../components/ui/BackButton'
 import { useWishlist } from '../lib/wishlist'
 import { PhoneCard } from '../components/ui/PhoneCard'
 import { fetchProductBySlug, fetchProductsByBrand } from '../lib/queries'
@@ -134,13 +135,7 @@ export function ProductPage() {
             <ChevronRight className="w-3 h-3" />
             <span className="text-text line-clamp-1">{product.name}</span>
           </nav>
-          <button
-            onClick={() => navigate(-1)}
-            className="btn-secondary text-sm py-1.5 px-3 inline-flex items-center gap-1 shrink-0"
-            aria-label="Go back"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" /> Back
-          </button>
+<BackButton />
         </div>
       </div>
 

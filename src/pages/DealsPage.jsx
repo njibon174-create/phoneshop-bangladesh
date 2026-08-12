@@ -1,3 +1,4 @@
+import { BackButton } from '../components/ui/BackButton'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Tag, ArrowRight, Sparkles } from 'lucide-react'
@@ -33,7 +34,7 @@ export function DealsPage() {
   }, [])
 
   return (
-    <main className="section-container py-8">
+    <main className="section-container py-8"><div className="mb-4"><BackButton /></div>
       <header className="mb-8">
         <div className="flex items-center gap-2 mb-2">
           <Tag className="w-5 h-5 text-neon-green" />

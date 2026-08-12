@@ -1,3 +1,4 @@
+import { BackButton } from '../components/ui/BackButton'
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Plus, X, GitCompare } from 'lucide-react'
@@ -121,6 +122,7 @@ export function ComparePage() {
   if (loading && products.length === 0) {
     return (
       <main className="section-container py-8">
+      <div className="mb-4"><BackButton /></div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-pulse">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="card p-4">

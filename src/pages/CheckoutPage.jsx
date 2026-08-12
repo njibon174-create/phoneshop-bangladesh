@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Truck, Store, ChevronRight, ChevronLeft, MapPin, User, Phone, Mail, FileText, Wallet } from 'lucide-react'
 import { useCart, formatPrice } from '../lib/cart'
+import { BackButton } from '../components/ui/BackButton'
 import { createOrder } from '../lib/queries'
 
 const SHOP_PICKUP_ADDRESS = {
@@ -96,6 +97,7 @@ export function CheckoutPage() {
 
   return (
     <main className="section-container py-8">
+      <div className="mb-4"><BackButton to="/cart" /></div>
       <Link to="/cart" className="inline-flex items-center gap-1 text-sm text-sec-text hover:text-neon-green mb-6">
         <ChevronLeft className="w-4 h-4" /> Back to cart
       </Link>

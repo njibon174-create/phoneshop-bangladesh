@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Heart, ShoppingCart, Trash2, ArrowRight } from 'lucide-react'
 import { useWishlist } from '../lib/wishlist'
 import { useCart } from '../lib/cart'
+import { BackButton } from '../components/ui/BackButton'
 
 function formatPrice(bdt) {
   if (bdt == null) return '—'
@@ -45,7 +46,7 @@ export function WishlistPage() {
   }
 
   return (
-    <main className="section-container py-8">
+    <main className="section-container py-8"><div className="mb-4"><BackButton /></div>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-main-text">Your Wishlist ({items.length})</h1>

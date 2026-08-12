@@ -1,6 +1,7 @@
+import { BackButton } from '../components/ui/BackButton'
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams, Link } from 'react-router-dom'
-import { SlidersHorizontal, X, ChevronRight } from 'lucide-react'
+import { SlidersHorizontal, X, ChevronRight, ChevronLeft, ArrowLeft } from 'lucide-react'
 import { PhoneCard } from '../components/ui/PhoneCard'
 import { FilterSidebar } from '../components/ui/FilterSidebar'
 import { useProductFilters } from '../lib/useFilters'
@@ -38,14 +39,17 @@ export function BrandPage() {
 
   return (
     <main className="section-container py-8">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-1 text-sm text-textSubtle mb-4">
-        <Link to="/" className="hover:text-accent">Home</Link>
-        <ChevronRight className="w-3 h-3" />
-        <Link to="/brands" className="hover:text-accent">Brands</Link>
-        <ChevronRight className="w-3 h-3" />
-        <span className="text-text">{brand?.name || (slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : "")}</span>
-      </nav>
+      {/* Breadcrumb + Back button */}
+      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+        <nav className="flex items-center gap-1 text-sm text-textSubtle min-w-0 flex-1">
+          <Link to="/" className="hover:text-accent">Home</Link>
+          <ChevronRight className="w-3 h-3" />
+          <Link to="/brands" className="hover:text-accent">Brands</Link>
+          <ChevronRight className="w-3 h-3" />
+          <span className="text-text">{brand?.name || (slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : "")}</span>
+        </nav>
+<BackButton />
+      </div>
 
       {/* Hero */}
       <div className="bg-gradient-to-br from-surface to-surfaceElevated border border-border rounded-2xl p-8 mb-8">
