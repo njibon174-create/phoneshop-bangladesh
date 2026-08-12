@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ChevronRight, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, Check, X, Cpu, Battery, Camera, HardDrive, Smartphone } from 'lucide-react'
+import { ChevronRight, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, Check, X, Cpu, Battery, Camera, HardDrive, Smartphone, CheckCircle2 } from 'lucide-react'
+import { useCart } from '../lib/cart'
 import { PhoneCard } from '../components/ui/PhoneCard'
 import { fetchProductBySlug, fetchProductsByBrand } from '../lib/queries'
-import { supabase } from '../lib/supabase'
 
 function formatPrice(bdt) {
   if (bdt == null) return '—'

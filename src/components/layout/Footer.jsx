@@ -78,7 +78,7 @@ export function Footer() {
         </div>
         <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-textSubtle">© 2025 PhoneShop BD. All rights reserved. Dhaka, Bangladesh.</p>
-          <p className="text-xs text-textSubtle">Payment: Cash on Delivery • bKash • Nagad</p>
+          <p className="text-xs text-textSubtle">Payment: Cash on Delivery • Home Delivery • Shop Pickup</p>
         </div>
       </div>
     </footer>
