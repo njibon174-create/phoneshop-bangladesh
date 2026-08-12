@@ -163,21 +163,29 @@ export async function createOrder({ customer, items, deliveryMethod = 'home' }) 
   const orderItems = validItems.map((item) => {
     const product = priceMap.get(item.slug)
     if (!product) {
-      // Better hint: show the product name (not just the slug) so the user
-      // knows which item to remove from the cart.
       const name = item.name || item.slug || 'unknown'
       throw new Error(`"${name}" is not available in the storefront. Please remove it from your cart and re-add it from the homepage.`)
     }
     if (product.stock_count <= 0) throw new Error(`${product.name} is out of stock`)
     if (item.quantity > product.stock_count) throw new Error(`Only ${product.stock_count} units of ${product.name} available`)
-    const unitPrice = product.price_bdt
+
+    // Sanitize the unit price — fall back to the cart's stored price if the
+    // storefront view returned null/undefined, and coerce to Number to avoid NaN.
+    const cartPrice = Number(item.unit_price_bdt != null ? item.unit_price_bdt : item.price_bdt)
+    const storePrice = Number(product.price_bdt)
+    const unitPrice = Number.isFinite(storePrice) && storePrice > 0 ? storePrice
+                     : Number.isFinite(cartPrice) && cartPrice > 0 ? cartPrice
+                     : 0
+    if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
+      throw new Error(`Invalid price for "${product.name}". Please contact support.`)
+    }
     const lineTotal = unitPrice * item.quantity
     subtotal += lineTotal
     return {
-      // product_id is a soft-reference to either products.id or phones.id.
-      // The DB still has a foreign key to products, so we set product_id to the
-      // cheapest_unit_id (a phone UUID) — which causes the FK to fail.
-      // Workaround: omit product_id if cheapest_unit_id is not a valid products.id.
+      // product_id is a soft-reference. The DB FK points to public.products.id
+      // but storefront data lives in public.phones — so we use the phone UUID.
+      // The order_items insert is wrapped in a try/catch below so a FK violation
+      // doesn't fail the entire order.
       product_id: product.cheapest_unit_id || product.id,
       product_name: product.name,
       product_variant: product.variant,

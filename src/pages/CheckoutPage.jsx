@@ -67,6 +67,7 @@ export function CheckoutPage() {
         notes: form.notes.trim() || null,
       }
       const itemsForOrder = items.map((it) => ({
+        slug: it.slug,
         product_id: it.id,
         quantity: it.quantity,
       }))

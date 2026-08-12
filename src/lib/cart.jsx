@@ -15,7 +15,17 @@ function loadCart() {
     if (!Array.isArray(parsed)) return []
     // Filter out invalid items (no slug, no name, no quantity) — these
     // can't be ordered and would otherwise break createOrder.
-    const filtered = parsed.filter((it) => it && it.slug && it.name && it.quantity > 0)
+    // Validate each item and coerce numeric fields to remove NaN
+    const filtered = parsed
+      .filter((it) => it && it.slug && it.name && it.quantity > 0)
+      .map((it) => ({
+        ...it,
+        quantity: Number.isFinite(Number(it.quantity)) ? Math.max(1, Math.floor(Number(it.quantity))) : 1,
+        unit_price_bdt: Number.isFinite(Number(it.unit_price_bdt)) ? Math.max(0, Number(it.unit_price_bdt))
+                     : Number.isFinite(Number(it.price_bdt)) ? Math.max(0, Number(it.price_bdt))
+                     : 0,
+      }))
+      .filter((it) => it.unit_price_bdt > 0)  // drop items with no valid price too
     if (filtered.length !== parsed.length) {
       // Persist the cleaned cart so we don't trigger the error again.
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered)) } catch {}
@@ -104,7 +114,12 @@ export function CartProvider({ children }) {
   const clear = useCallback(() => setItems([]), [])
 
   const itemCount = items.reduce((n, it) => n + it.quantity, 0)
-  const subtotal = items.reduce((n, it) => n + it.unit_price_bdt * it.quantity, 0)
+  const subtotal = items.reduce((n, it) => {
+    const price = Number(it.unit_price_bdt != null ? it.unit_price_bdt : it.price_bdt)
+    const qty = Number(it.quantity) || 0
+    if (!Number.isFinite(price) || price <= 0) return n
+    return n + price * qty
+  }, 0)
 
   const value = {
     items,
