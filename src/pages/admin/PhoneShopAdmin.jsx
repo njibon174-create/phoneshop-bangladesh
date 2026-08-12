@@ -68,6 +68,7 @@ function PhoneIcon() {
 export function PhoneShopAdmin() {
   const [activeTab, setActiveTab] = useState('inventory')
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [addOpen, setAddOpen] = useState(false)
   const { logout } = useAdmin()
   const navigate = useNavigate()
 
