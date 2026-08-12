@@ -119,10 +119,16 @@ export async function fetchDeals({ limit = 50 } = {}) {
 export async function createOrder({ customer, items, deliveryMethod = 'home' }) {
   if (!items?.length) throw new Error('No items in order')
 
+  // Drop invalid items first (no slug = can't be ordered)
+  const validItems = items.filter((i) => i && i.slug)
+  if (validItems.length !== items.length) {
+    throw new Error(`${items.length - validItems.length} item(s) in your cart are no longer available. Please clear your cart and re-add the items.`)
+  }
+
   // Fetch current prices from storefront_products view
   // Be tolerant: if a cart item has a UUID slug (a phone id), try to find
   // its parent product via the phones table.
-  const slugs = items.map((i) => i.slug).filter(Boolean)
+  const slugs = validItems.map((i) => i.slug).filter(Boolean)
   const isUUID = (s) => typeof s === 'string' && /^[0-9a-f-]{36}$/i.test(s)
   const uuidSlugs = items.filter((i) => isUUID(i.slug)).map((i) => i.slug)
   const namedSlugs = items.filter((i) => !isUUID(i.slug)).map((i) => i.slug)
@@ -154,7 +160,7 @@ export async function createOrder({ customer, items, deliveryMethod = 'home' }) 
   }
 
   let subtotal = 0
-  const orderItems = items.map((item) => {
+  const orderItems = validItems.map((item) => {
     const product = priceMap.get(item.slug)
     if (!product) {
       throw new Error(`Product not found in storefront. Try clearing your cart and re-adding the item. (slug: ${item.slug})`)

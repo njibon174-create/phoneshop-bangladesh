@@ -47,6 +47,13 @@ export function CartProvider({ children }) {
   }, [])
 
   const add = useCallback((product, qty = 1) => {
+    // Guard: do not add items without a slug — they can't be ordered.
+    if (!product || !product.slug) {
+      if (typeof console !== 'undefined') {
+        console.warn('[cart] add() rejected — product has no slug', product)
+      }
+      return false
+    }
     setItems((prev) => {
       const i = prev.findIndex((x) => x.slug === product.slug)
       if (i >= 0) {
@@ -57,17 +64,18 @@ export function CartProvider({ children }) {
       return [
         ...prev,
         {
-          id: product.id,
+          id: product.id || product.slug,
           slug: product.slug,
           name: product.name,
           variant: product.variant,
           brand: product.brand,
           image: product.image,
-          unit_price_bdt: product.unit_price_bdt,
+          unit_price_bdt: product.unit_price_bdt != null ? product.unit_price_bdt : product.price_bdt,
           quantity: qty,
         },
       ]
     })
+    return true
   }, [])
 
   const remove = useCallback((slug) => {

@@ -4,7 +4,7 @@ import { useCart, formatPrice } from '../lib/cart'
 import { BackButton } from '../components/ui/BackButton'
 
 export function CartPage() {
-  const { items, setQuantity, remove, subtotal, SHIPPING_HOME, SHIPPING_PICKUP } = useCart()
+  const { items, setQuantity, remove, subtotal, clear, SHIPPING_HOME, SHIPPING_PICKUP } = useCart()
   const navigate = useNavigate()
 
   if (items.length === 0) {
@@ -27,7 +27,15 @@ export function CartPage() {
   return (
     <main className="section-container py-8">
       <div className="mb-4"><BackButton /></div>
-      <h1 className="text-3xl font-bold text-main-text mb-6">Your Cart ({items.length})</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold text-main-text">Your Cart ({items.length})</h1>
+        <button
+          onClick={clear}
+          className="text-sm text-muted-text hover:text-danger inline-flex items-center gap-1"
+        >
+          <Trash2 className="w-4 h-4" /> Clear cart
+        </button>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
         {/* Items */}
