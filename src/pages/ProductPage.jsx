@@ -183,7 +183,7 @@ export function ProductPage() {
               )}
             </div>
 
-            <h1 className="text-3xl sm:text-4xl font-bold text-text mb-2">{product.name}</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-text mb-2">{product.brand_name} {product.name}</h1>
             {product.variant && <p className="text-textMuted mb-4">{product.variant}</p>}
 
             <div className="flex items-baseline gap-2 mb-1">
