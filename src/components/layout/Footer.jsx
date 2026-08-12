@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Phone, MapPin, Mail, Facebook, Instagram, Youtube, MessageCircle, ShieldCheck, Truck, RotateCcw, Award, Send } from 'lucide-react'
+import { Phone, MapPin, Mail, MessageCircle, ShieldCheck, Truck, RotateCcw, Award, Send } from 'lucide-react'
 
 const SHOP_LINKS = [
   { label: 'All Brands', to: '/brands' },
@@ -29,10 +29,10 @@ const COMPANY_LINKS = [
 ]
 
 const SOCIAL_LINKS = [
-  { name: 'Facebook', icon: Facebook, href: '#', color: '#1877F2' },
-  { name: 'Instagram', icon: Instagram, href: '#', color: '#E4405F' },
-  { name: 'YouTube', icon: Youtube, href: '#', color: '#FF0000' },
-  { name: 'WhatsApp', icon: MessageCircle, href: '#', color: '#25D366' },
+  { name: 'Facebook', href: '#', color: '#1877F2', path: 'M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6c1.5 0 1.5 1 1.5 2v2h2v2h-2v6h2c4.56-1.03 8-4.96 8-9.8z' },
+  { name: 'Instagram', href: '#', color: '#E4405F', path: 'M12 2.16c3.2 0 3.58 0 4.85.07 1.17.05 1.8.25 2.43.46.66.21 1.07.46 1.53.73.46.27.71.62.92 1.05.46.65.42 1.45.45 2.34.05.83.06 1.21.06s2.16.02 2.99-.07c.89-.05 1.69-.21 2.34-.66.46-.27.85-.62 1.05-1.05.21-.63.41-1.26.46-2.43.05-1.27.07-1.65.07-4.85s-.02-3.58-.07-4.85c-.05-1.17-.25-1.8-.46-2.43-.21-.66-.46-1.07-.73-1.53-.27-.46-.62-.71-1.05-.92-.65-.46-1.45-.42-2.34-.45-1.27-.05-1.65-.07-4.85-.07s-3.58.02-4.85.07c-1.17.05-1.8.25-2.43.46-.66.21-1.07.46-1.53.73-.46.27-.71.62-.92 1.05-.46.65-.42 1.45-.45 2.34-.05.83-.06 1.21-.06s2.16.02 2.99.07zm0 5.42c-2.45 0-4.42 1.97-4.42 4.42s1.97 4.42 4.42 4.42 4.42-1.97 4.42-4.42-1.97-4.42-4.42-4.42zm0 7.29c-1.59 0-2.87-1.29-2.87-2.87s1.29-2.87 2.87-2.87 2.87 1.29 2.87 2.87-1.29 2.87-2.87 2.87zm5.99-8.4c-.57 0-1.04-.47-1.04-1.04s.47-1.04 1.04-1.04 1.04.47 1.04 1.04-.47 1.04-1.04 1.04z' },
+  { name: 'YouTube', href: '#', color: '#FF0000', path: 'M21.58 7.19c-.23-.86-.91-1.54-1.77-1.77C18.25 5 12 5 12 5s-6.25 0-7.81.42c-.86.23-1.54.91-1.77 1.77C2 8.75 2 12 2 12s0 3.25.42 4.81c.23.86.91 1.54 1.77 1.77C5.75 19 12 19 12 19s6.25 0 7.81-.42c.86-.23 1.54-.91 1.77-1.77C22 15.25 22 12 22 12s0-3.25-.42-4.81zM10 15V9l5.2 3-5.2 3z' },
+  { name: 'WhatsApp', href: '#', color: '#25D366', path: 'M20.5 3.5C18.25 1.25 15.21 0 12 0 5.4 0 0 5.4 0 12c0 2.12.56 4.18 1.61 6L0 24l6.16-1.61c1.74.95 3.68 1.45 5.65 1.45h.01c6.6 0 12-5.4 12-12 0-3.21-1.25-6.25-3.5-8.5zM12 21.81c-1.82 0-3.6-.49-5.16-1.41l-.37-.22-3.81 1 1.02-3.71-.24-.38c-1.01-1.6-1.55-3.45-1.55-5.35 0-5.31 4.32-9.62 9.62-9.62 2.57 0 4.98 1 6.8 2.82 1.82 1.82 2.82 4.23 2.82 6.8 0 5.3-4.32 9.62-9.62 9.62z' },
 ]
 
 export function Footer() {
@@ -137,7 +137,7 @@ export function Footer() {
                 className="w-9 h-9 rounded-lg flex items-center justify-center"
                 style={{ backgroundColor: '#1E2A3A', border: '1px solid #1E3A5F', color: '#7EB8DA' }}
               >
-                <s.icon className="w-4 h-4" />
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d={s.path} /></svg>
               </a>
             ))}
           </div>
