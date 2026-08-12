@@ -1,53 +1,75 @@
+import { useEffect, useState } from 'react'
 import { ArrowRight, ChevronRight } from 'lucide-react'
 import { PhoneCard } from '../components/ui/PhoneCard'
+import { fetchBrands, fetchFeaturedProducts } from '../lib/queries'
 
-const BRANDS = ['Apple', 'Samsung', 'Xiaomi', 'Vivo', 'Oppo', 'Realme', 'Infinix', 'Symphony', 'Walton', 'itel']
+const FALLBACK_BRANDS = ['Apple', 'Samsung', 'Xiaomi', 'Vivo', 'Oppo', 'Realme', 'Infinix', 'Symphony', 'Walton', 'itel']
 
-// Image URLs from public sources (no downloads). Using placeholder/Pexels.
-const HERO_IMAGE = 'https://images.pexels.com/photos/699122/pexels-photo-699122.jpeg?auto=compress&cs=tinysrgb&w=1920'
+const FALLBACK_HERO_IMAGE = 'https://images.pexels.com/photos/699122/pexels-photo-699122.jpeg?auto=compress&cs=tinysrgb&w=1920'
 
-const PHONES = [
+const FALLBACK_PHONES = [
   {
-    id: 1,
-    brand: 'Apple',
-    name: 'iPhone 15 Pro Max',
-    variant: '256GB Natural Titanium',
-    price: '৳1,89,999',
-    image: 'https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=600',
+    id: '1', brand_name: 'Apple', name: 'iPhone 15 Pro Max', variant: '256GB Natural Titanium',
+    price_bdt: 189999, slug: 'iphone-15-pro-max-256gb-natural-titanium',
+    primary_image_url: 'https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=600',
   },
   {
-    id: 2,
-    brand: 'Samsung',
-    name: 'Galaxy S24 Ultra',
-    variant: '512GB Titanium Black',
-    price: '৳1,79,999',
-    image: 'https://images.pexels.com/photos/18105/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=600',
+    id: '2', brand_name: 'Samsung', name: 'Galaxy S24 Ultra', variant: '512GB Titanium Black',
+    price_bdt: 179999, slug: 'samsung-galaxy-s24-ultra-512gb-titanium-black',
+    primary_image_url: 'https://images.pexels.com/photos/18105/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=600',
   },
   {
-    id: 3,
-    brand: 'Xiaomi',
-    name: 'Xiaomi 14 Ultra',
-    variant: '512GB Titanium',
-    price: '৳1,29,999',
-    image: 'https://images.pexels.com/photos/1092644/pexels-photo-1092644.jpeg?auto=compress&cs=tinysrgb&w=600',
+    id: '3', brand_name: 'Xiaomi', name: 'Xiaomi 14 Ultra', variant: '512GB Titanium',
+    price_bdt: 129999, slug: 'xiaomi-14-ultra-512gb-titanium',
+    primary_image_url: 'https://images.pexels.com/photos/1092644/pexels-photo-1092644.jpeg?auto=compress&cs=tinysrgb&w=600',
   },
   {
-    id: 4,
-    brand: 'Google',
-    name: 'Pixel 9 Pro XL',
-    variant: '256GB Obsidian',
-    price: '৳1,39,999',
-    image: 'https://images.pexels.com/photos/214487/pexels-photo-214487.jpeg?auto=compress&cs=tinysrgb&w=600',
+    id: '4', brand_name: 'Walton', name: 'Walton Primo H10', variant: '128GB Ocean Blue',
+    price_bdt: 18999, slug: 'walton-primo-h10-128gb',
+    primary_image_url: 'https://images.pexels.com/photos/214487/pexels-photo-214487.jpeg?auto=compress&cs=tinysrgb&w=600',
   },
 ]
 
+function formatPrice(bdt) {
+  if (bdt == null) return '—'
+  return '৳' + Number(bdt).toLocaleString('en-IN')
+}
+
 export function Home() {
+  const [brands, setBrands] = useState(FALLBACK_BRANDS)
+  const [phones, setPhones] = useState(FALLBACK_PHONES)
+  const [usingFallback, setUsingFallback] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        const [brandsData, phonesData] = await Promise.all([
+          fetchBrands().catch(() => null),
+          fetchFeaturedProducts(8).catch(() => null),
+        ])
+        if (cancelled) return
+        if (brandsData?.length) {
+          setBrands(brandsData.map((b) => b.name))
+        }
+        if (phonesData?.length) {
+          setPhones(phonesData)
+          setUsingFallback(false)
+        }
+      } catch (e) {
+        console.warn('Home data fetch failed, using fallback:', e.message)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
+
   return (
     <main>
       {/* HERO */}
       <section className="relative h-[80vh] min-h-[560px] flex items-center overflow-hidden">
         <div className="absolute inset-0">
-          <img src={HERO_IMAGE} alt="" className="w-full h-full object-cover opacity-30" />
+          <img src={FALLBACK_HERO_IMAGE} alt="" className="w-full h-full object-cover opacity-30" />
           <div className="absolute inset-0 bg-gradient-to-br from-background via-background/90 to-surface" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_30%,rgba(99,102,241,0.2),transparent_60%)]" />
         </div>
@@ -99,9 +121,9 @@ export function Home() {
         <div className="section-container">
           <p className="text-center text-xs text-textSubtle font-medium uppercase tracking-widest mb-8">Trusted by All Major Brands</p>
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
-            {BRANDS.map((brand) => (
-              <a key={brand} href={`/brand/${brand.toLowerCase()}`} className="text-sm font-bold text-textMuted hover:text-text transition-colors">
-                {brand}
+            {brands.map((b) => (
+              <a key={b} href={`/brand/${(b.name || b).toLowerCase()}`} className="text-sm font-bold text-textMuted hover:text-text transition-colors">
+                {b.name || b}
               </a>
             ))}
           </div>
@@ -121,8 +143,26 @@ export function Home() {
             </a>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {PHONES.map((p) => <PhoneCard key={p.id} phone={p} />)}
+            {phones.map((p) => (
+              <PhoneCard
+                key={p.id}
+                phone={{
+                  id: p.id,
+                  brand: p.brand_name,
+                  name: p.name,
+                  variant: p.variant,
+                  price: formatPrice(p.price_bdt),
+                  image: p.primary_image_url,
+                  slug: p.slug,
+                }}
+              />
+            ))}
           </div>
+          {usingFallback && (
+            <p className="text-xs text-textSubtle text-center mt-6">
+              ℹ Showing placeholder data. Connect to Supabase to see real products.
+            </p>
+          )}
         </div>
       </section>
 

@@ -1,6 +1,6 @@
 export function PhoneCard({ phone }) {
   return (
-    <div className="card p-5">
+    <a href={`/product/${phone.slug || phone.id}`} className="card p-5 block hover:no-underline">
       <div className="aspect-square bg-surfaceElevated rounded-xl flex items-center justify-center mb-4 overflow-hidden">
         <img src={phone.image} alt={phone.name} className="w-full h-full object-contain p-4 transition-transform duration-300 hover:scale-105" loading="lazy" />
       </div>
@@ -12,9 +12,9 @@ export function PhoneCard({ phone }) {
         <span className="text-xs text-textSubtle">BDT</span>
       </div>
       <div className="flex gap-2">
-        <button className="btn-primary flex-1 py-2 text-sm">View</button>
-        <button className="btn-secondary py-2 px-3 text-sm">Buy</button>
+        <button className="btn-primary flex-1 py-2 text-sm" onClick={(e) => e.preventDefault()}>View</button>
+        <button className="btn-secondary py-2 px-3 text-sm" onClick={(e) => e.preventDefault()}>Buy</button>
       </div>
-    </div>
+    </a>
   )
 }
