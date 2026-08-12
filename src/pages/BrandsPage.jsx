@@ -47,11 +47,7 @@ export function BrandsPage() {
         ))}
       </div>
 
-      {usingFallback && (
-        <p className="text-xs text-textSubtle text-center mt-6">
-          ℹ Showing placeholder data. Connect to Supabase to see real brands.
-        </p>
-      )}
+
     </main>
   )
 }
