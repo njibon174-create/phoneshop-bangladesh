@@ -35,10 +35,10 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
-                <Smartphone className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{background: 'linear-gradient(135deg, #00FF88, #00D4FF)'}}>
+                <Smartphone className="w-4 h-4 text-black" />
               </div>
-              <span className="font-bold text-lg text-text">PhoneShop BD</span>
+              <span className="font-bold text-lg text-main-text">PhoneShop BD</span>
             </div>
             <p className="text-sm text-textMuted mb-4 leading-relaxed">
               Bangladesh's most trusted mobile phone retailer. New & refurbished phones from all top brands at the best prices.

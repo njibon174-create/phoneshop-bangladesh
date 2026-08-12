@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowRight, ChevronRight } from 'lucide-react'
+import { ArrowRight, ChevronRight, Sparkles, Zap, Shield, Truck, BadgeCheck, MessageCircle } from 'lucide-react'
 import { PhoneCard } from '../components/ui/PhoneCard'
 import { fetchBrands, fetchFeaturedProducts } from '../lib/queries'
 
@@ -49,9 +49,7 @@ export function Home() {
           fetchFeaturedProducts(8).catch(() => null),
         ])
         if (cancelled) return
-        if (brandsData?.length) {
-          setBrands(brandsData.map((b) => b.name))
-        }
+        if (brandsData?.length) setBrands(brandsData)
         if (phonesData?.length) {
           setPhones(phonesData)
           setUsingFallback(false)
@@ -68,46 +66,53 @@ export function Home() {
     <main>
       {/* HERO */}
       <section className="relative h-[80vh] min-h-[560px] flex items-center overflow-hidden">
+        {/* Background */}
         <div className="absolute inset-0">
-          <img src={FALLBACK_HERO_IMAGE} alt="" className="w-full h-full object-cover opacity-30" />
-          <div className="absolute inset-0 bg-gradient-to-br from-background via-background/90 to-surface" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_30%,rgba(99,102,241,0.2),transparent_60%)]" />
+          <img src={FALLBACK_HERO_IMAGE} alt="" className="w-full h-full object-cover opacity-20" />
+          <div className="absolute inset-0 bg-gradient-to-br from-dark-bg via-dark-bg/95 to-sec-bg" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_30%,rgba(0,255,136,0.15),transparent_60%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_70%,rgba(0,212,255,0.12),transparent_50%)]" />
+          {/* Tech grid overlay */}
+          <div className="absolute inset-0 opacity-[0.04]" style={{backgroundImage: 'linear-gradient(rgba(0,255,136,.4) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.4) 1px,transparent 1px)', backgroundSize: '60px 60px'}} />
+          {/* Top neon divider */}
+          <div className="absolute top-0 left-0 right-0 h-px neon-divider" />
         </div>
+
         <div className="relative z-10 section-container">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 text-accent text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
-              <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+            <div className="inline-flex items-center gap-2 bg-neon-green/10 border border-neon-green/30 text-neon-green text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
+              <span className="w-2 h-2 bg-neon-green rounded-full animate-pulse shadow-neon-green" />
               New Season Collection 2025
             </div>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-text leading-[1.05] mb-6">
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-main-text leading-[1.05] mb-6">
               Bangladesh's
               <br />
               <span className="gradient-text">Premium Phone</span>
               <br />
               Destination
             </h1>
-            <p className="text-lg sm:text-xl text-textMuted max-w-xl mb-8">
+            <p className="text-lg sm:text-xl text-sec-text max-w-xl mb-8">
               From the latest iPhone to budget-friendly smartphones — authentic products, official warranty, and fast delivery across Bangladesh.
             </p>
             <div className="flex flex-wrap gap-4">
-              <button className="btn-primary flex items-center gap-2 text-base px-8 py-3.5">
+              <button className="btn-primary text-base px-8 py-3.5 animate-pulse-glow">
                 Shop Now <ArrowRight className="w-5 h-5" />
               </button>
-              <button className="btn-secondary flex items-center gap-2 text-base px-8 py-3.5">
+              <button className="btn-secondary text-base px-8 py-3.5">
                 Compare Phones
               </button>
             </div>
             <div className="flex flex-wrap gap-6 mt-10">
               {[
-                { label: 'Official Warranty', sub: 'All products' },
-                { label: 'Fast Delivery', sub: 'All over BD' },
-                { label: '100% Authentic', sub: 'Genuine products' },
+                { icon: Shield, label: 'Official Warranty', sub: 'All products' },
+                { icon: Zap, label: 'Fast Delivery', sub: 'All over BD' },
+                { icon: BadgeCheck, label: '100% Authentic', sub: 'Genuine products' },
               ].map((b) => (
                 <div key={b.label} className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-accent rounded-full" />
+                  <b.icon className="w-4 h-4 text-neon-green" />
                   <div>
-                    <p className="text-xs font-semibold text-text">{b.label}</p>
-                    <p className="text-[10px] text-textSubtle">{b.sub}</p>
+                    <p className="text-xs font-semibold text-main-text">{b.label}</p>
+                    <p className="text-[10px] text-muted-text">{b.sub}</p>
                   </div>
                 </div>
               ))}
@@ -117,12 +122,12 @@ export function Home() {
       </section>
 
       {/* BRAND STRIP */}
-      <section className="py-12 border-y border-border bg-surface/50">
+      <section className="py-12 border-y border-border bg-sec-bg/50">
         <div className="section-container">
-          <p className="text-center text-xs text-textSubtle font-medium uppercase tracking-widest mb-8">Trusted by All Major Brands</p>
+          <p className="text-center text-xs text-muted-text font-medium uppercase tracking-widest mb-8">Trusted by All Major Brands</p>
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
             {brands.map((b) => (
-              <a key={b.slug || b.name || b} href={`/brand/${b.slug || (b.name || b).toLowerCase()}`} className="text-sm font-bold text-textMuted hover:text-text transition-colors">
+              <a key={b.slug || b.name || b} href={`/brand/${b.slug || (b.name || b).toLowerCase()}`} className="text-sm font-bold text-sec-text hover:text-neon-green transition-colors duration-200">
                 {b.name || b}
               </a>
             ))}
@@ -135,10 +140,13 @@ export function Home() {
         <div className="section-container">
           <div className="flex items-end justify-between mb-10">
             <div>
-              <p className="text-xs text-accent font-semibold uppercase tracking-widest mb-2">Featured</p>
-              <h2 className="text-3xl sm:text-4xl font-bold text-text">Trending Phones</h2>
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-4 h-4 text-neon-green" />
+                <p className="text-xs text-neon-green font-semibold uppercase tracking-widest">Featured</p>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-main-text">Trending Phones</h2>
             </div>
-            <a href="/brands" className="hidden sm:flex items-center gap-1 text-sm text-textMuted hover:text-accent">
+            <a href="/brands" className="hidden sm:flex items-center gap-1 text-sm text-sec-text hover:text-neon-blue transition-colors">
               View All <ChevronRight className="w-4 h-4" />
             </a>
           </div>
@@ -159,7 +167,7 @@ export function Home() {
             ))}
           </div>
           {usingFallback && (
-            <p className="text-xs text-textSubtle text-center mt-6">
+            <p className="text-xs text-muted-text text-center mt-6">
               ℹ Showing placeholder data. Connect to Supabase to see real products.
             </p>
           )}
@@ -167,19 +175,21 @@ export function Home() {
       </section>
 
       {/* VALUE PROPS */}
-      <section className="py-16 bg-surface border-y border-border">
+      <section className="py-16 bg-sec-bg border-y border-border">
         <div className="section-container">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: '🛡️', title: 'Official Warranty', desc: 'Every phone comes with manufacturer warranty' },
-              { icon: '🚚', title: 'Fast Delivery', desc: 'Delivery all over Bangladesh within 2-5 days' },
-              { icon: '✅', title: '100% Authentic', desc: 'Only genuine products, verified source' },
-              { icon: '💬', title: '24/7 Support', desc: 'WhatsApp & phone support in Bangla & English' },
+              { icon: Shield, title: 'Official Warranty', desc: 'Every phone comes with manufacturer warranty' },
+              { icon: Truck, title: 'Fast Delivery', desc: 'Delivery all over Bangladesh within 2-5 days' },
+              { icon: BadgeCheck, title: '100% Authentic', desc: 'Only genuine products, verified source' },
+              { icon: MessageCircle, title: '24/7 Support', desc: 'WhatsApp & phone support in Bangla & English' },
             ].map((it, i) => (
-              <div key={i} className="flex flex-col items-center text-center p-6 rounded-2xl bg-surfaceElevated border border-border">
-                <span className="text-3xl mb-3">{it.icon}</span>
-                <h3 className="font-semibold text-text mb-1">{it.title}</h3>
-                <p className="text-xs text-textMuted">{it.desc}</p>
+              <div key={i} className="flex flex-col items-center text-center p-6 rounded-2xl bg-card-bg border border-border hover:border-neon-green/30 transition-colors">
+                <div className="w-12 h-12 bg-neon-green/10 border border-neon-green/20 rounded-xl flex items-center justify-center mb-3">
+                  <it.icon className="w-5 h-5 text-neon-green" />
+                </div>
+                <h3 className="font-semibold text-main-text mb-1">{it.title}</h3>
+                <p className="text-xs text-sec-text">{it.desc}</p>
               </div>
             ))}
           </div>
