@@ -18,18 +18,16 @@ export function Home() {
     async function load() {
       try {
         const [brandsData, phonesData] = await Promise.all([
-          fetchBrands().catch(() => null),
-          fetchFeaturedProducts(8).catch(() => null),
+          fetchBrands().catch(() => []),
+          fetchFeaturedProducts(8).catch(() => []),
         ])
         if (cancelled) return
         if (brandsData?.length) setBrands(brandsData)
-        if (phonesData?.length) {
-          setPhones(phonesData)
-          setUsingFallback(false)
-        }
+        if (phonesData?.length) setPhones(phonesData)
       } catch (e) {
         console.warn('Home data fetch failed:', e.message)
       }
+      if (!cancelled) setLoading(false)
     }
     load()
     return () => { cancelled = true }
