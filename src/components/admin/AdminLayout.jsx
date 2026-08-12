@@ -1,3 +1,4 @@
+import React from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAdmin } from '../../lib/admin/auth'
 import { LogOut, Shield, Menu, X } from 'lucide-react'
@@ -101,9 +102,30 @@ export function AdminLayout({ children, title, subtitle, actions }) {
         </header>
 
         <div className="p-4 sm:p-6">
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </div>
       </main>
     </div>
   )
+}
+
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  componentDidCatch(error, info) { console.error('AdminLayout error:', error, info); }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="card p-6">
+          <h2 className="text-lg font-semibold text-danger mb-2">Something went wrong</h2>
+          <p className="text-sm text-sec-text mb-3">{this.state.error.message || String(this.state.error)}</p>
+          <pre className="text-xs text-muted-text bg-elev-bg p-3 rounded overflow-auto max-h-64 whitespace-pre-wrap">{this.state.error.stack || ''}</pre>
+          <button onClick={() => this.setState({ error: null })} className="btn-primary mt-4 text-sm">Try again</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }

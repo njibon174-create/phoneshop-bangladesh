@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { AdminLayout } from '../../components/admin/AdminLayout'
 import { ToastContainer, showToast } from '../../components/admin/Toast'
 import { supabase } from '../../lib/supabase'
-import { Plus, Save, X, ArrowUp, ArrowRight, Edit2, Trash2, ChevronDown, History } from 'lucide-react'
+import { Plus, Save, X, ArrowUp, ArrowRight, ArrowDown, Edit2, Trash2, ChevronDown, History } from 'lucide-react'
 
 function formatBDT(n) {
   return '\u09F3' + Number(n || 0).toLocaleString('en-IN')
@@ -187,56 +187,63 @@ export function AdminCashflow() {
             </thead>
             <tbody className="divide-y divide-border">
               {filtered.map((t) => {
-                const canEdit = MANUAL_TYPES.includes(t.type)
-                const isExpanded = expandedHistory[t.id]
-                const history = edits[t.id] || []
-                return (
-                  <React.Fragment key={t.id}>
-                    <tr className="hover:bg-elev-bg/30">
-                      <td className="px-4 py-3 text-sm text-sec-text whitespace-nowrap">{new Date(t.transaction_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                      <td className="px-4 py-3">
-                        <span className={`badge text-[10px] ${t.direction === 'in' ? 'bg-success/20 text-success' : 'bg-error/20 text-error'}`}>
-                          {TX_TYPES.find((x) => x.value === t.type)?.label || t.type}
-                        </span>
-                        {t.type === 'refund' && <span className="ml-1 text-[10px] text-muted-text">(auto from return)</span>}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-sec-text max-w-xs truncate">{t.note || '-'}</td>
-                      <td className={`px-4 py-3 text-right font-semibold ${t.direction === 'in' ? 'text-neon-green' : 'text-danger'}`}>
-                        {t.direction === 'in' ? '+' : '−'}{formatBDT(t.amount)}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex justify-end gap-1">
-                          {canEdit && (
-                            <>
+                try {
+                  const canEdit = MANUAL_TYPES.includes(t.type)
+                  const isExpanded = expandedHistory[t.id]
+                  const history = edits[t.id] || []
+                  const txLabel = (TX_TYPES.find((x) => x.value === t.type) || {}).label || t.type || 'Unknown'
+                  const txDate = t.transaction_date ? new Date(t.transaction_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'
+                  const txDir = t.direction === 'in' ? 'in' : 'out'
+                  return (
+                    <>
+                      <tr key={t.id} className="hover:bg-elev-bg/30">
+                        <td className="px-4 py-3 text-sm text-sec-text whitespace-nowrap">{txDate}</td>
+                        <td className="px-4 py-3">
+                          <span className={"badge text-[10px] " + (txDir === 'in' ? 'bg-success/20 text-success' : 'bg-error/20 text-error')}>
+                            {txLabel}
+                          </span>
+                          {t.type === 'refund' && <span className="ml-1 text-[10px] text-muted-text">(auto)</span>}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-sec-text max-w-xs truncate">{t.note || '-'}</td>
+                        <td className={"px-4 py-3 text-right font-semibold " + (txDir === 'in' ? 'text-neon-green' : 'text-danger')}>
+                          {txDir === 'in' ? '+' : '−'}{formatBDT(t.amount)}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex justify-end gap-1">
+                            {canEdit && (
                               <button onClick={() => startEdit(t)} className="btn-ghost p-1.5" title="Edit"><Edit2 className="w-3.5 h-3.5" /></button>
+                            )}
+                            {canEdit && (
                               <button onClick={() => del(t.id)} className="btn-ghost p-1.5 text-danger hover:bg-danger/10" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
-                            </>
-                          )}
-                          {history.length > 0 && (
-                            <button onClick={() => { setExpandedHistory((e) => ({ ...e, [t.id]: !isExpanded })); loadHistory(t.id) }} className="btn-ghost p-1.5" title="Edit history">
-                              <History className={`w-3.5 h-3.5 ${isExpanded ? 'text-neon-blue' : ''}`} />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                    {isExpanded && history.length > 0 && (
-                      <tr className="bg-elev-bg/40">
-                        <td colSpan="5" className="px-4 py-3">
-                          <p className="text-xs text-muted-text uppercase mb-1">Edit history</p>
-                          <div className="space-y-1">
-                            {history.map((h) => (
-                              <div key={h.id} className="text-xs text-sec-text flex justify-between">
-                                <span>{h.reason}</span>
-                                <span>{h.old_amount != null && `৳${h.old_amount} → ৳${h.new_amount}`} · {new Date(h.edited_at).toLocaleString('en-GB')}</span>
-                              </div>
-                            ))}
+                            )}
+                            {history.length > 0 && (
+                              <button onClick={() => { setExpandedHistory((e) => ({ ...e, [t.id]: !isExpanded })); loadHistory(t.id) }} className="btn-ghost p-1.5" title="Edit history">
+                                <History className={"w-3.5 h-3.5 " + (isExpanded ? 'text-neon-blue' : '')} />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
-                    )}
-                  </React.Fragment>
-                )
+                      {isExpanded && history.length > 0 && (
+                        <tr key={t.id + '-hist'} className="bg-elev-bg/40">
+                          <td colSpan="5" className="px-4 py-3">
+                            <p className="text-xs text-muted-text uppercase mb-1">Edit history</p>
+                            <div className="space-y-1">
+                              {history.map((h) => (
+                                <div key={h.id} className="text-xs text-sec-text flex justify-between">
+                                  <span>{h.reason || 'Edit'}</span>
+                                  <span>{h.old_amount != null ? `৳${h.old_amount} → ৳${h.new_amount}` : ''} · {h.edited_at ? new Date(h.edited_at).toLocaleString('en-GB') : ''}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  )
+                } catch (e) {
+                  return <tr key={t.id}><td colSpan="5" className="px-4 py-3 text-danger text-xs">Render error: {e.message}</td></tr>
+                }
               })}
             </tbody>
           </table>
