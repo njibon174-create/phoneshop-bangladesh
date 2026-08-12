@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ChevronRight, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, Check, X, Cpu, Battery, Camera, HardDrive, Smartphone, CheckCircle2 } from 'lucide-react'
+import { ChevronRight, ChevronLeft, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, Check, X, Cpu, Battery, Camera, HardDrive, Smartphone, CheckCircle2 } from 'lucide-react'
 import { useCart } from '../lib/cart'
 import { useWishlist } from '../lib/wishlist'
 import { PhoneCard } from '../components/ui/PhoneCard'
@@ -124,15 +124,24 @@ export function ProductPage() {
     <main className="bg-background">
       {/* Breadcrumb */}
       <div className="section-container pt-6">
-        <nav className="flex items-center gap-1 text-sm text-textSubtle mb-4">
-          <Link to="/" className="hover:text-accent">Home</Link>
-          <ChevronRight className="w-3 h-3" />
-          <Link to="/brands" className="hover:text-accent">Brands</Link>
-          <ChevronRight className="w-3 h-3" />
-          <Link to={`/brand/${product.brand_slug}`} className="hover:text-accent">{product.brand_name}</Link>
-          <ChevronRight className="w-3 h-3" />
-          <span className="text-text line-clamp-1">{product.name}</span>
-        </nav>
+        <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+          <nav className="flex items-center gap-1 text-sm text-textSubtle min-w-0 flex-1">
+            <Link to="/" className="hover:text-accent">Home</Link>
+            <ChevronRight className="w-3 h-3" />
+            <Link to="/brands" className="hover:text-accent">Brands</Link>
+            <ChevronRight className="w-3 h-3" />
+            <Link to={`/brand/${product.brand_slug}`} className="hover:text-accent">{product.brand_name}</Link>
+            <ChevronRight className="w-3 h-3" />
+            <span className="text-text line-clamp-1">{product.name}</span>
+          </nav>
+          <button
+            onClick={() => navigate(-1)}
+            className="btn-secondary text-sm py-1.5 px-3 inline-flex items-center gap-1 shrink-0"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" /> Back
+          </button>
+        </div>
       </div>
 
       <div className="section-container pb-12">

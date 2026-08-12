@@ -44,13 +44,13 @@ export function BrandPage() {
         <ChevronRight className="w-3 h-3" />
         <Link to="/brands" className="hover:text-accent">Brands</Link>
         <ChevronRight className="w-3 h-3" />
-        <span className="text-text">{brand?.name || slug}</span>
+        <span className="text-text">{brand?.name || (slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : "")}</span>
       </nav>
 
       {/* Hero */}
       <div className="bg-gradient-to-br from-surface to-surfaceElevated border border-border rounded-2xl p-8 mb-8">
         <h1 className="text-4xl sm:text-5xl font-bold text-text mb-2">
-          {brand?.name || slug}
+          {brand?.name || (slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : "")}
         </h1>
         <p className="text-textMuted max-w-2xl">
           {brand?.description || `Browse all ${brand?.name || slug} phones available at PhoneShop BD.`}
