@@ -76,7 +76,7 @@ Tables:
 - [x] Step 2: Supabase schema (brands, products, inventory, images, orders)
 - [x] Step 3: Product listing pages + filtering + search
 - [x] Step 4: Product detail page (image gallery, full specs, related phones)
-- [ ] Step 5: Cart + order flow (COD + bKash/Nagad)
+- [x] Step 5: Cart + checkout (COD only, home delivery + shop pickup)
 - [ ] Step 6: Admin panel
 - [ ] Step 7: Performance + SEO
 - [ ] Step 8: Polish + production deploy
