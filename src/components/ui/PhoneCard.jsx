@@ -123,7 +123,6 @@ export function PhoneCard({ phone }) {
       <div className="flex gap-2 relative z-10">
         <Link
           to={productHref}
-          onClick={(e) => e.stopPropagation()}
           className="btn-primary flex-1 py-2 text-sm text-center"
         >
           View
