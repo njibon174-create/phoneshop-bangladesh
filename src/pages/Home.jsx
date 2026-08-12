@@ -3,42 +3,15 @@ import { ArrowRight, ChevronRight, Sparkles, Zap, Shield, Truck, BadgeCheck, Mes
 import { PhoneCard } from '../components/ui/PhoneCard'
 import { fetchBrands, fetchFeaturedProducts } from '../lib/queries'
 
-const FALLBACK_BRANDS = ['Apple', 'Samsung', 'Xiaomi', 'Vivo', 'Oppo', 'Realme', 'Infinix', 'Symphony', 'Walton', 'itel']
-
-const FALLBACK_HERO_IMAGE = 'https://images.pexels.com/photos/699122/pexels-photo-699122.jpeg?auto=compress&cs=tinysrgb&w=1920'
-
-const FALLBACK_PHONES = [
-  {
-    id: '1', brand_name: 'Apple', name: 'iPhone 15 Pro Max', variant: '256GB Natural Titanium',
-    price_bdt: 189999, slug: 'iphone-15-pro-max-256gb-natural-titanium',
-    primary_image_url: 'https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=600',
-  },
-  {
-    id: '2', brand_name: 'Samsung', name: 'Galaxy S24 Ultra', variant: '512GB Titanium Black',
-    price_bdt: 179999, slug: 'samsung-galaxy-s24-ultra-512gb-titanium-black',
-    primary_image_url: 'https://images.pexels.com/photos/18105/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=600',
-  },
-  {
-    id: '3', brand_name: 'Xiaomi', name: 'Xiaomi 14 Ultra', variant: '512GB Titanium',
-    price_bdt: 129999, slug: 'xiaomi-14-ultra-512gb-titanium',
-    primary_image_url: 'https://images.pexels.com/photos/1092644/pexels-photo-1092644.jpeg?auto=compress&cs=tinysrgb&w=600',
-  },
-  {
-    id: '4', brand_name: 'Walton', name: 'Walton Primo H10', variant: '128GB Ocean Blue',
-    price_bdt: 18999, slug: 'walton-primo-h10-128gb',
-    primary_image_url: 'https://images.pexels.com/photos/214487/pexels-photo-214487.jpeg?auto=compress&cs=tinysrgb&w=600',
-  },
-]
-
 function formatPrice(bdt) {
   if (bdt == null) return '—'
   return '৳' + Number(bdt).toLocaleString('en-IN')
 }
 
 export function Home() {
-  const [brands, setBrands] = useState(FALLBACK_BRANDS)
-  const [phones, setPhones] = useState(FALLBACK_PHONES)
-  const [usingFallback, setUsingFallback] = useState(true)
+  const [brands, setBrands] = useState([])
+  const [phones, setPhones] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
@@ -55,7 +28,7 @@ export function Home() {
           setUsingFallback(false)
         }
       } catch (e) {
-        console.warn('Home data fetch failed, using fallback:', e.message)
+        console.warn('Home data fetch failed:', e.message)
       }
     }
     load()
@@ -68,7 +41,7 @@ export function Home() {
       <section className="relative h-[80vh] min-h-[560px] flex items-center overflow-hidden">
         {/* Background */}
         <div className="absolute inset-0">
-          <img src={FALLBACK_HERO_IMAGE} alt="" className="w-full h-full object-cover opacity-20" />
+          <div className="w-full h-full bg-gradient-to-br from-sec-bg via-dark-bg to-sec-bg" />
           <div className="absolute inset-0 bg-gradient-to-br from-dark-bg via-dark-bg/95 to-sec-bg" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_30%,rgba(0,255,136,0.15),transparent_60%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_70%,rgba(0,212,255,0.12),transparent_50%)]" />
@@ -126,11 +99,15 @@ export function Home() {
         <div className="section-container">
           <p className="text-center text-xs text-muted-text font-medium uppercase tracking-widest mb-8">Trusted by All Major Brands</p>
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
-            {brands.map((b) => (
-              <a key={b.slug || b.name || b} href={`/brand/${b.slug || (b.name || b).toLowerCase()}`} className="text-sm font-bold text-sec-text hover:text-neon-green transition-colors duration-200">
-                {b.name || b}
-              </a>
-            ))}
+            {brands.length === 0 ? (
+              <p className="text-xs text-muted-text">Loading brands…</p>
+            ) : (
+              brands.map((b) => (
+                <a key={b.slug || b.name || b} href={`/brand/${b.slug || (b.name || b).toLowerCase()}`} className="text-sm font-bold text-sec-text hover:text-neon-green transition-colors duration-200">
+                  {b.name || b}
+                </a>
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -150,26 +127,41 @@ export function Home() {
               View All <ChevronRight className="w-4 h-4" />
             </a>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {phones.map((p) => (
-              <PhoneCard
-                key={p.id}
-                phone={{
-                  id: p.id,
-                  brand: p.brand_name,
-                  name: p.name,
-                  variant: p.variant,
-                  price: formatPrice(p.price_bdt),
-                  image: p.primary_image_url,
-                  slug: p.slug,
-                }}
-              />
-            ))}
-          </div>
-          {usingFallback && (
-            <p className="text-xs text-muted-text text-center mt-6">
-              ℹ Showing placeholder data. Connect to Supabase to see real products.
-            </p>
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="card p-5 animate-pulse">
+                  <div className="aspect-square bg-surfaceElevated rounded-xl mb-4" />
+                  <div className="h-3 bg-surfaceElevated rounded w-1/3 mb-2" />
+                  <div className="h-4 bg-surfaceElevated rounded w-3/4 mb-2" />
+                  <div className="h-2 bg-surfaceElevated rounded w-full mb-3" />
+                  <div className="h-5 bg-surfaceElevated rounded w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : phones.length === 0 ? (
+            <div className="card p-12 text-center">
+              <p className="text-5xl mb-3">📱</p>
+              <p className="text-sec-text text-lg mb-2">No phones yet</p>
+              <p className="text-xs text-muted-text">Phones added from the admin will appear here.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {phones.map((p) => (
+                <PhoneCard
+                  key={p.id}
+                  phone={{
+                    id: p.id,
+                    brand: p.brand_name,
+                    name: p.name,
+                    variant: p.variant,
+                    price: formatPrice(p.price_bdt),
+                    image: p.primary_image_url,
+                    slug: p.slug,
+                  }}
+                />
+              ))}
+            </div>
           )}
         </div>
       </section>

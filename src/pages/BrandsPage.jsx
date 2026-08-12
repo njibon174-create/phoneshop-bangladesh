@@ -3,32 +3,18 @@ import { Link } from 'react-router-dom'
 import { Smartphone } from 'lucide-react'
 import { fetchBrands } from '../lib/queries'
 
-const BRAND_FALLBACK = [
-  { name: 'Apple', slug: 'apple', description: 'iPhone lineup — new and certified refurbished.' },
-  { name: 'Samsung', slug: 'samsung', description: 'Galaxy S, Z, A, M series — official stock.' },
-  { name: 'Xiaomi', slug: 'xiaomi', description: 'Mi, Redmi, Poco flagship and mid-range.' },
-  { name: 'Vivo', slug: 'vivo', description: 'Vivo Y, V, X series — camera-focused.' },
-  { name: 'Oppo', slug: 'oppo', description: 'Oppo A, F, Reno series — sleek and reliable.' },
-  { name: 'Realme', slug: 'realme', description: 'Realme C, Narzo, GT — performance budget.' },
-  { name: 'Infinix', slug: 'infinix', description: 'Infinix Hot, Note, Zero — big battery.' },
-  { name: 'Symphony', slug: 'symphony', description: 'Bangladesh-built smartphones.' },
-  { name: 'Walton', slug: 'walton', description: 'Primo, Nexg, Tecra — local brand.' },
-  { name: 'itel', slug: 'itel', description: 'itel A, S, Vision — entry-level.' },
-]
 
 export function BrandsPage() {
-  const [brands, setBrands] = useState(BRAND_FALLBACK)
-  const [usingFallback, setUsingFallback] = useState(true)
+  const [brands, setBrands] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
     async function load() {
-      const data = await fetchBrands().catch(() => null)
+      const data = await fetchBrands().catch(() => [])
       if (cancelled) return
-      if (data?.length) {
-        setBrands(data)
-        setUsingFallback(false)
-      }
+      setBrands(data || [])
+      setLoading(false)
     }
     load()
     return () => { cancelled = true }

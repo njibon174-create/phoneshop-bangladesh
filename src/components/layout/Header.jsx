@@ -7,14 +7,6 @@ import { useWishlist } from '../../lib/wishlist'
 import { getItems as getCompareItems, subscribe as compareSubscribe } from '../../lib/compare'
 import { useSyncExternalStore } from 'react'
 
-const FALLBACK_BRANDS = [
-  { name: 'Apple', slug: 'apple' }, { name: 'Samsung', slug: 'samsung' },
-  { name: 'Xiaomi', slug: 'xiaomi' }, { name: 'Vivo', slug: 'vivo' },
-  { name: 'Oppo', slug: 'oppo' }, { name: 'Realme', slug: 'realme' },
-  { name: 'Infinix', slug: 'infinix' }, { name: 'Symphony', slug: 'symphony' },
-  { name: 'Walton', slug: 'walton' }, { name: 'itel', slug: 'itel' },
-]
-
 export function Header() {
   const navigate = useNavigate()
   const { itemCount } = useCart()
@@ -22,7 +14,7 @@ export function Header() {
   const compareItems = useSyncExternalStore(compareSubscribe, getCompareItems, getCompareItems)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [brandsOpen, setBrandsOpen] = useState(false)
-  const [brands, setBrands] = useState(FALLBACK_BRANDS)
+  const [brands, setBrands] = useState([])
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchInput, setSearchInput] = useState('')
 
