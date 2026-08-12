@@ -50,9 +50,9 @@ export function SettingsPage() {
   useEffect(() => {
     async function load() {
       try {
-        const { data } = await supabase.from('site_settings').select('*').eq('id', 'main').maybeSingle()
+        const { data } = await supabase.from('site_settings').select('*').eq('id', 1).maybeSingle()
         // Build a fully-populated settings object (in case the row is missing)
-        const defaults = { id: 'main' }
+        const defaults = { id: 1 }
         for (const k of Object.keys(FIELDS)) defaults[k] = ''
         for (const f of FAQ_FIELDS) { defaults[f.q] = ''; defaults[f.a] = '' }
         setSettings({ ...defaults, ...(data || {}) })
@@ -67,7 +67,7 @@ export function SettingsPage() {
   async function save() {
     setSaving(true)
     const { id, ...payload } = settings
-    const { error } = await supabase.from('site_settings').upsert({ id: 'main', ...payload })
+    const { error } = await supabase.from('site_settings').upsert({ id: 1, ...payload })
     setSaving(false)
     if (error) showToast(error.message, 'error')
     else showToast('Settings saved.')

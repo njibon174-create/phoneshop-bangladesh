@@ -15,6 +15,7 @@ const SHOP_PICKUP_ADDRESS = {
 export function CheckoutPage() {
   const navigate = useNavigate()
   const { items, subtotal, clear, SHIPPING_HOME, SHIPPING_PICKUP } = useCart()
+  const invalidSlugs = items.filter((i) => !i || !i.slug).length
   const [deliveryMethod, setDeliveryMethod] = useState('home')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
@@ -78,6 +79,11 @@ export function CheckoutPage() {
       navigate(`/order-confirmed?order=${encodeURIComponent(order.order_number)}`)
     } catch (e) {
       setError(e.message || 'Something went wrong placing your order')
+      // If the error is about invalid items, auto-clear them so the user can
+      // re-add from the storefront.
+      if (e.message && /no longer available/i.test(e.message)) {
+        clear()
+      }
     } finally {
       setSubmitting(false)
     }
@@ -99,6 +105,15 @@ export function CheckoutPage() {
       <Link to="/cart" className="inline-flex items-center gap-1 text-sm text-sec-text hover:text-neon-green mb-6">
         <ChevronLeft className="w-4 h-4" /> Back to cart
       </Link>
+
+      {invalidSlugs > 0 && (
+        <div className="mb-4 px-4 py-3 rounded-xl bg-[#FBBF2420] border border-[#FBBF2450] text-sm text-[#FBBF24] flex items-center justify-between gap-3">
+          <span>⚠️ {invalidSlugs} item(s) in your cart are no longer available.</span>
+          <button type="button" onClick={() => clear()} className="px-3 py-1 rounded-lg bg-[#FBBF24] text-black text-xs font-bold">
+            Clear cart
+          </button>
+        </div>
+      )}
 
       <form onSubmit={submit} className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
         <div className="space-y-6">
