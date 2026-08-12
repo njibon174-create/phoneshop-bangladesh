@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { supabase } from './supabase'
 
 /**
- * useProductFilters — fetches from products_with_meta view with filters.
+ * useProductFilters — fetches from storefront_products view with filters.
  * Filters: brand_slug, price_min, price_max, ram_gb (array), storage_gb (array), condition, sort.
  * Syncs to URL query params so filters are shareable.
  */
@@ -51,7 +51,7 @@ export function useProductFilters() {
       setError(null)
       try {
         let query = supabase
-          .from('products_with_meta')
+          .from('storefront_products')
           .select('*', { count: 'exact' })
 
         // Brand filter

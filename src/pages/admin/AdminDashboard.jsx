@@ -41,7 +41,7 @@ export function AdminDashboard() {
 
       const [orders, products, credits, cash, inventory] = await Promise.all([
         supabase.from('orders').select('*').order('created_at', { ascending: false }).limit(50),
-        supabase.from('products').select('id, name, slug, brand_name, brand_slug, price_bdt, stock_count, stock_status').eq('is_active', true),
+        supabase.from('storefront_products').select('id, name, slug, brand_name, brand_slug, price_bdt, stock_count, stock_status'),
         supabase.from('credits').select('*').eq('status', 'pending'),
         supabase.from('cash_transactions').select('*').gte('transaction_date', monthStart),
         supabase.from('inventory').select('product_id, stock_count, low_stock_at').lte('stock_count', 5),

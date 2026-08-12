@@ -23,8 +23,6 @@ import { CartProvider } from './lib/cart'
 import { AdminProvider, useAdmin } from './lib/admin/auth'
 import { AdminLogin } from './pages/admin/AdminLogin'
 import { AdminDashboard } from './pages/admin/AdminDashboard'
-import { AdminProducts } from './pages/admin/AdminProducts'
-import { AdminProductEdit } from './pages/admin/AdminProductEdit'
 import { AdminBrands } from './pages/admin/AdminBrands'
 import { AdminInventory } from './pages/admin/AdminInventory'
 import { AdminOrders } from './pages/admin/AdminOrders'
@@ -62,11 +60,9 @@ export default function App() {
             {/* Admin routes — no Header/Footer, use AdminLayout internally */}
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
-            <Route path="/admin/products" element={<AdminGuard><AdminProducts /></AdminGuard>} />
-            <Route path="/admin/products/new" element={<AdminGuard><AdminProductEdit /></AdminGuard>} />
-            <Route path="/admin/products/:id" element={<AdminGuard><AdminProductEdit /></AdminGuard>} />
             <Route path="/admin/brands" element={<AdminGuard><AdminBrands /></AdminGuard>} />
             <Route path="/admin/inventory" element={<AdminGuard><AdminInventory /></AdminGuard>} />
+            <Route path="/admin/products" element={<AdminGuard><AdminInventory /></AdminGuard>} />
             <Route path="/admin/orders" element={<AdminGuard><AdminOrders /></AdminGuard>} />
             <Route path="/admin/sales" element={<AdminGuard><AdminSales /></AdminGuard>} />
             <Route path="/admin/dues" element={<AdminGuard><AdminDues /></AdminGuard>} />

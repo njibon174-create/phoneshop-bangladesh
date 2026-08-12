@@ -6,7 +6,7 @@ import { useState } from 'react'
 
 const NAV = [
   { to: '/admin', label: 'Dashboard', icon: '📊', end: true },
-  { to: '/admin/products', label: 'Products', icon: '📱' },
+  { to: '/admin/inventory', label: 'Inventory & Storefront', icon: '📱' },
   { to: '/admin/inventory', label: 'Inventory', icon: '📦' },
   { to: '/admin/brands', label: 'Brands', icon: '🏷️' },
   { to: '/admin/orders', label: 'Orders', icon: '🛒' },

@@ -18,7 +18,7 @@ export function DealsPage() {
     async function load() {
       // phones with a compare_price_bdt set (i.e., on sale)
       const { data } = await supabase
-        .from('products_with_meta')
+        .from('storefront_products')
         .select('*')
         .not('compare_price_bdt', 'is', null)
         .gt('compare_price_bdt', 0)

@@ -51,7 +51,7 @@ export function AdminReports() {
       supabase.from('cash_transactions').select('*').gte('transaction_date', cs).lte('transaction_date', ce),
       supabase.from('credits').select('*'),
       supabase.from('phones').select('id, brand, model, product_id, status, buy_price'),
-      supabase.from('products').select('id, name, brand_name, price_bdt, stock_count, is_active'),
+      supabase.from('storefront_products').select('id, name, brand_name, price_bdt, stock_count'),
       supabase.from('inventory').select('product_id, stock_count, low_stock_at').lte('stock_count', 5),
     ])
 
