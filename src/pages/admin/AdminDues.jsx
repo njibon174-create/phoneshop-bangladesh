@@ -163,7 +163,7 @@ export function AdminDues() {
       {loading ? (
         <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="card p-4 animate-pulse h-16" />)}</div>
       ) : credits.length === 0 ? (
-        <div className="card p-12 text-center"><p className="text-5xl mb-3">\u23F3</p><p className="text-sec-text">No credits tracked yet.</p></div>
+        <div className="card p-12 text-center"><p className="text-5xl mb-3">⏰</p><p className="text-sec-text">No credits tracked yet.</p></div>
       ) : (
         <div className="space-y-3">
           {credits.map((c) => {

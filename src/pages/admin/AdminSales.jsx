@@ -245,14 +245,14 @@ export function AdminSales() {
       {loading ? (
         <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="card p-4 animate-pulse h-16" />)}</div>
       ) : filtered.length === 0 ? (
-        <div className="card p-12 text-center"><p className="text-5xl mb-3">\u{1F4B5}</p><p className="text-sec-text">No sales match your filters.</p></div>
+        <div className="card p-12 text-center"><p className="text-5xl mb-3">💵</p><p className="text-sec-text">No sales match your filters.</p></div>
       ) : (
         <div className="space-y-4">
           {Object.entries(grouped).map(([date, items]) => (
             <div key={date}>
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-semibold text-sec-text">{formatDate(date)}</h3>
-                <p className="text-xs text-muted-text">{items.length} sales \u00B7 {formatBDT(items.reduce((s, x) => s + Number(x.sell_price), 0))}</p>
+                <p className="text-xs text-muted-text">{items.length} sales · {formatBDT(items.reduce((s, x) => s + Number(x.sell_price), 0))}</p>
               </div>
               <div className="card overflow-hidden">
                 <table className="w-full">

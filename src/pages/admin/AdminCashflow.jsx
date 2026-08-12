@@ -82,7 +82,7 @@ export function AdminCashflow() {
       if (oldAmount !== newAmount || oldTx.type !== form.type) {
         await supabase.from('cash_transaction_edits').insert({
           transaction_id: editing, old_amount: oldAmount, new_amount: newAmount,
-          reason: form.type !== oldTx.type ? `Type changed: ${oldTx.type} \u2192 ${form.type}` : 'Amount changed',
+          reason: form.type !== oldTx.type ? `Type changed: ${oldTx.type} → ${form.type}` : 'Amount changed',
         })
       }
       showToast('Transaction updated.', 'success')
@@ -173,7 +173,7 @@ export function AdminCashflow() {
       {loading ? (
         <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="card p-4 animate-pulse h-16" />)}</div>
       ) : filtered.length === 0 ? (
-        <div className="card p-12 text-center"><p className="text-5xl mb-3">\u{1F4B0}</p><p className="text-sec-text">No transactions match.</p></div>
+        <div className="card p-12 text-center"><p className="text-5xl mb-3">💰</p><p className="text-sec-text">No transactions match.</p></div>
       ) : (
         <div className="card overflow-x-auto">
           <table className="w-full">
@@ -203,7 +203,7 @@ export function AdminCashflow() {
                       </td>
                       <td className="px-4 py-3 text-sm text-sec-text max-w-xs truncate">{t.note || '-'}</td>
                       <td className={`px-4 py-3 text-right font-semibold ${t.direction === 'in' ? 'text-neon-green' : 'text-danger'}`}>
-                        {t.direction === 'in' ? '+' : '\u2212'}{formatBDT(t.amount)}
+                        {t.direction === 'in' ? '+' : '−'}{formatBDT(t.amount)}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex justify-end gap-1">
@@ -229,7 +229,7 @@ export function AdminCashflow() {
                             {history.map((h) => (
                               <div key={h.id} className="text-xs text-sec-text flex justify-between">
                                 <span>{h.reason}</span>
-                                <span>{h.old_amount != null && `৳${h.old_amount} \u2192 ৳${h.new_amount}`} \u00B7 {new Date(h.edited_at).toLocaleString('en-GB')}</span>
+                                <span>{h.old_amount != null && `৳${h.old_amount} → ৳${h.new_amount}`} · {new Date(h.edited_at).toLocaleString('en-GB')}</span>
                               </div>
                             ))}
                           </div>

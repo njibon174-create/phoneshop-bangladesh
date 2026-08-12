@@ -292,7 +292,7 @@ export function AdminReports() {
                       <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${i === 0 ? 'bg-neon-green text-black' : i < 3 ? 'bg-neon-blue/20 text-neon-blue' : 'bg-elev-bg text-muted-text border border-border'}`}>{i + 1}</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-main-text truncate">{p.brand} {p.name}</p>
-                        <p className="text-[10px] text-muted-text">{p.count} sold \u00B7 profit {formatBDT(p.profit)}</p>
+                        <p className="text-[10px] text-muted-text">{p.count} sold · profit {formatBDT(p.profit)}</p>
                       </div>
                       <p className="font-semibold text-neon-green text-sm shrink-0">{formatBDT(p.revenue)}</p>
                     </div>
