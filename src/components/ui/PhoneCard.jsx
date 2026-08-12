@@ -13,6 +13,7 @@ export function PhoneCard({ phone }) {
   const slug = phone.slug || phone.id
   const isInCompare = compareHas(slug)
   const isInWish = inWishlist(slug)
+  const productHref = `/product/${slug}`
 
   const productData = {
     slug,
@@ -23,6 +24,13 @@ export function PhoneCard({ phone }) {
     image: phone.image,
     unit_price_bdt: phone.unit_price_bdt ?? phone.price_bdt,
     price_bdt: phone.price_bdt ?? phone.unit_price_bdt,
+  }
+
+  function goToProduct(e) {
+    // Don't trigger if user clicked a button/link inside the card
+    if (e.target.closest('button, a, input, select, textarea')) return
+    e.preventDefault()
+    navigate(productHref)
   }
 
   function handleBuy(e) {
@@ -47,10 +55,18 @@ export function PhoneCard({ phone }) {
   }
 
   return (
-    <div className="card p-5 block hover:no-underline relative group">
-      <Link to={`/product/${slug}`} className="block">
+    <div
+      className="card p-5 hover:no-underline relative group cursor-pointer"
+      onClick={goToProduct}
+      role="article"
+    >
+      <Link to={productHref} className="block" onClick={(e) => e.stopPropagation()}>
         <div className="aspect-square bg-surfaceElevated rounded-xl flex items-center justify-center mb-4 overflow-hidden">
-          <img src={phone.image} alt={phone.name} className="w-full h-full object-contain p-4 transition-transform duration-300 hover:scale-105" loading="lazy" />
+          {phone.image ? (
+            <img src={phone.image} alt={phone.name} className="w-full h-full object-contain p-4 transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-5xl opacity-30">📱</div>
+          )}
         </div>
         <div className="inline-block bg-accent/20 text-accent text-xs font-semibold px-2 py-1 rounded-lg mb-2">{phone.brand}</div>
         <h3 className="font-semibold text-text text-base mb-1 line-clamp-1">{phone.name}</h3>
@@ -64,9 +80,10 @@ export function PhoneCard({ phone }) {
         </div>
       </Link>
 
-      {/* Floating actions (top-right) */}
-      <div className="absolute top-3 right-3 flex flex-col gap-1.5 opacity-70 group-hover:opacity-100 transition-opacity">
+      {/* Floating actions (top-right) — use stopPropagation to prevent card click */}
+      <div className="absolute top-3 right-3 flex flex-col gap-1.5 opacity-70 group-hover:opacity-100 transition-opacity z-10">
         <button
+          type="button"
           onClick={handleWish}
           aria-label={isInWish ? 'Remove from wishlist' : 'Add to wishlist'}
           className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
@@ -76,6 +93,7 @@ export function PhoneCard({ phone }) {
           <Heart className={`w-4 h-4 ${isInWish ? 'fill-current' : ''}`} />
         </button>
         <button
+          type="button"
           onClick={handleCompare}
           aria-label={isInCompare ? 'Already in compare' : 'Add to compare'}
           className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
@@ -86,12 +104,17 @@ export function PhoneCard({ phone }) {
         </button>
       </div>
 
-      {/* Bottom CTAs */}
-      <div className="flex gap-2">
-        <Link to={`/product/${slug}`} className="btn-primary flex-1 py-2 text-sm text-center">
+      {/* Bottom CTAs — also use stopPropagation */}
+      <div className="flex gap-2 relative z-10">
+        <Link
+          to={productHref}
+          onClick={(e) => e.stopPropagation()}
+          className="btn-primary flex-1 py-2 text-sm text-center"
+        >
           View
         </Link>
         <button
+          type="button"
           onClick={handleBuy}
           className="btn-secondary py-2 px-3 text-sm flex items-center justify-center gap-1 min-w-[80px]"
         >
