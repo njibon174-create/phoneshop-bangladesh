@@ -1,5 +1,15 @@
-import { lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import { lazy, Suspense, useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
+
+// ScrollToTop: scroll to top on every route change
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    // Use smooth scroll behavior
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [pathname])
+  return null
+}
 import { CartProvider } from './lib/cart'
 import { AdminProvider, useAdmin } from './lib/admin/auth'
 import { AdminLogin } from './pages/admin/AdminLogin'

@@ -23,7 +23,7 @@ export function OrdersPage() {
   const [items, setItems] = useState({})
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('pending')
   const [openId, setOpenId] = useState(null)
 
   async function load() {
