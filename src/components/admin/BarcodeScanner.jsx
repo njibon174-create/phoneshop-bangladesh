@@ -1,18 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
 import { X, Camera, AlertCircle } from 'lucide-react'
-
-const SUPPORTED_FORMATS = [
-  Html5QrcodeSupportedFormats.CODE_128,
-  Html5QrcodeSupportedFormats.CODE_39,
-  Html5QrcodeSupportedFormats.EAN_13,
-  Html5QrcodeSupportedFormats.EAN_8,
-  Html5QrcodeSupportedFormats.UPC_A,
-  Html5QrcodeSupportedFormats.UPC_E,
-  Html5QrcodeSupportedFormats.CODE_93,
-  Html5QrcodeSupportedFormats.ITF,
-  Html5QrcodeSupportedFormats.QR_CODE,
-]
 
 export default function BarcodeScanner({ onScan, onClose, title = 'Scan IMEI / Barcode' }) {
   const [error, setError] = useState(null)
@@ -21,10 +8,12 @@ export default function BarcodeScanner({ onScan, onClose, title = 'Scan IMEI / B
   const scannerId = 'barcode-scanner-container'
 
   const stopScanner = useCallback(() => {
-    if (html5QrRef.current) {
-      html5QrRef.current.stop().then(() => {
+    if (html5QrRef.current && typeof html5QrRef.current.stop === 'function') {
+      try {
+        html5QrRef.current.stop().then(() => { html5QrRef.current = null }).catch(() => { html5QrRef.current = null })
+      } catch (e) {
         html5QrRef.current = null
-      }).catch(() => { html5QrRef.current = null })
+      }
     }
     setScanning(false)
   }, [])
@@ -35,9 +24,12 @@ export default function BarcodeScanner({ onScan, onClose, title = 'Scan IMEI / B
 
   const startScanner = useCallback(async () => {
     setError(null)
-    if (!document.getElementById(scannerId)) return
+    const el = document.getElementById(scannerId)
+    if (!el) return
 
     try {
+      // Dynamic import to avoid SSR/build issues
+      const { Html5Qrcode } = await import('html5-qrcode')
       const html5Qr = new Html5Qrcode(scannerId)
       html5QrRef.current = html5Qr
 
@@ -47,32 +39,30 @@ export default function BarcodeScanner({ onScan, onClose, title = 'Scan IMEI / B
           fps: 10,
           qrbox: { width: 280, height: 100 },
           aspectRatio: 1.0,
-          formatsToSupport: SUPPORTED_FORMATS,
           experimentalFeatures: { useBarCodeDetectorIfSupported: true },
         },
         (decodedText) => {
-          html5Qr.stop().then(() => {
-            html5QrRef.current = null
-            setScanning(false)
-            onScan(decodedText)
-          }).catch(() => {
-            html5QrRef.current = null
-            setScanning(false)
-            onScan(decodedText)
-          })
+          // Success callback
+          try { html5Qr.stop() } catch (e) {}
+          html5QrRef.current = null
+          setScanning(false)
+          onScan(decodedText)
         },
-        () => {}
+        () => {} // ignore per-frame failures
       )
       setScanning(true)
     } catch (err) {
       setScanning(false)
-      const msg = err?.message || err?.toString() || ''
-      if (msg.toLowerCase().includes('permission') || msg.toLowerCase().includes('denied') || msg.toLowerCase().includes('notallowed')) {
-        setError('Camera permission denied. Please allow camera access and try again, or enter the IMEI manually.')
-      } else if (msg.toLowerCase().includes('notfound') || msg.toLowerCase().includes('no device')) {
-        setError('No camera found on this device. Use manual IMEI entry.')
+      const msg = (err && (err.message || err.toString())) || ''
+      const lower = msg.toLowerCase()
+      if (lower.includes('permission') || lower.includes('denied') || lower.includes('notallowed')) {
+        setError('Camera permission denied. Please allow camera access, or enter the IMEI manually below.')
+      } else if (lower.includes('notfound') || lower.includes('no device') || lower.includes('Requested device not found')) {
+        setError('No camera found on this device. Use manual IMEI entry below.')
+      } else if (lower.includes('secure') || lower.includes('https')) {
+        setError('Camera requires HTTPS. Use manual IMEI entry below.')
       } else {
-        setError('Camera error: ' + msg)
+        setError('Camera error: ' + msg + '. You can enter the IMEI manually below.')
       }
     }
   }, [onScan])

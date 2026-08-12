@@ -5,6 +5,7 @@ import BarcodeScanner from '../../components/admin/BarcodeScanner'
 import { SellPhoneModal } from '../../components/admin/SellPhoneModal'
 import { supabase } from '../../lib/supabase'
 import { Plus, Edit2, Save, X, Package, Search, Camera, Trash2, ShoppingCart, LayoutGrid, List as ListIcon } from 'lucide-react'
+import BarcodeScanner from '../../components/admin/BarcodeScanner'
 
 function formatBDT(n) {
   return '\u09F3' + Number(n || 0).toLocaleString('en-IN')
@@ -22,6 +23,7 @@ export function AdminInventory() {
   const [creating, setCreating] = useState(false)
   const [selling, setSelling] = useState(null)
   const [showScanner, setShowScanner] = useState(false)
+  const [imeiScannerOpen, setImeiScannerOpen] = useState(false)
   const [adjusting, setAdjusting] = useState(null)
   const [adjustQty, setAdjustQty] = useState(0)
   const [form, setForm] = useState({ brand: '', model: '', imei: '', buy_price: 0, mrp: 0, status: 'in_stock', product_id: '' })
@@ -179,6 +181,13 @@ export function AdminInventory() {
       )}
 
       {showScanner && <BarcodeScanner onScan={handleScanResult} onClose={() => setShowScanner(false)} />}
+      {imeiScannerOpen && (
+        <BarcodeScanner
+          title="Scan IMEI for new phone"
+          onScan={(code) => { setForm((f) => ({ ...f, imei: code.replace(/\\D/g, '') })); setImeiScannerOpen(false); showToast('IMEI captured', 'success') }}
+          onClose={() => setImeiScannerOpen(false)}
+        />
+      )}
       {selling && <SellPhoneModal phone={selling} onSuccess={handleSellSuccess} onCancel={() => setSelling(null)} />}
 
       <h2 className="text-lg font-semibold text-main-text mb-3 mt-8 flex items-center justify-between">
@@ -214,7 +223,7 @@ export function AdminInventory() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div><label className="block text-xs font-medium text-sec-text mb-1.5">Brand *</label><input type="text" value={form.brand} onChange={(e) => setForm((f) => ({ ...f, brand: e.target.value }))} className="input" placeholder="e.g. Samsung" /></div>
             <div><label className="block text-xs font-medium text-sec-text mb-1.5">Model *</label><input type="text" value={form.model} onChange={(e) => setForm((f) => ({ ...f, model: e.target.value }))} className="input" placeholder="e.g. Galaxy S24 Ultra" /></div>
-            <div><label className="block text-xs font-medium text-sec-text mb-1.5">IMEI</label><input type="text" value={form.imei} onChange={(e) => setForm((f) => ({ ...f, imei: e.target.value.replace(/\D/g, '') }))} className="input font-mono text-xs" placeholder="14-16 digits" maxLength="16" /></div>
+            <div><label className="block text-xs font-medium text-sec-text mb-1.5">IMEI</label><div className="flex gap-1"><input type="text" value={form.imei} onChange={(e) => setForm((f) => ({ ...f, imei: e.target.value.replace(/\\D/g, '') }))} className="input font-mono text-xs flex-1" placeholder="14-16 digits" maxLength="16" /><button type="button" onClick={() => setImeiScannerOpen(true)} className="btn-secondary p-2 shrink-0" title="Scan IMEI barcode"><Camera className="w-4 h-4" /></button></div></div>
             <div><label className="block text-xs font-medium text-sec-text mb-1.5">Buy price</label><input type="number" value={form.buy_price} onChange={(e) => setForm((f) => ({ ...f, buy_price: e.target.value }))} className="input" /></div>
             <div><label className="block text-xs font-medium text-sec-text mb-1.5">MRP</label><input type="number" value={form.mrp} onChange={(e) => setForm((f) => ({ ...f, mrp: e.target.value }))} className="input" /></div>
             <div><label className="block text-xs font-medium text-sec-text mb-1.5">Status</label>
