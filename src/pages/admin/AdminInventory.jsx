@@ -73,6 +73,7 @@ export function AdminInventory() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
+  const [imeiList, setImeiList] = useState(['']) // list of IMEIs (one per unit)
   const [formError, setFormError] = useState(null)
   const [msg, setMsg] = useState(null)
   const [showScanner, setShowScanner] = useState(false)
@@ -155,6 +156,7 @@ export function AdminInventory() {
   function openAdd() {
     setEditingId(null)
     setForm({ ...EMPTY_FORM, specs: { ...EMPTY_FORM.specs } })
+    setImeiList([''])
     setFormError(null)
     setShowAddForm(true)
   }
@@ -176,24 +178,59 @@ export function AdminInventory() {
       is_bestseller: !!p.is_bestseller,
       specs: { ...EMPTY_FORM.specs, ...(p.specs || {}) },
     })
+    setImeiList([p.imei || ''])
     setFormError(null)
     setShowAddForm(true)
   }
 
   function closeForm() {
-    setShowAddForm(false); setEditingId(null); setFormError(null)
+    setShowAddForm(false); setEditingId(null); setFormError(null); setImeiList([''])
   }
 
   async function save() {
     setFormError(null)
-    // Validate
+    // Validate common fields
     if (!form.brand.trim()) { setFormError('Brand is required'); return }
     if (!form.model.trim()) { setFormError('Model is required'); return }
-    if (!form.imei.trim()) { setFormError('IMEI is required — each unit must have a unique IMEI'); return }
-    if (form.imei.length < 14) { setFormError('IMEI must be at least 14 digits'); return }
     if (!form.mrp || Number(form.mrp) <= 0) { setFormError('MRP (selling price) is required'); return }
     if (!form.buy_price || Number(form.buy_price) <= 0) { setFormError('Buy price is required'); return }
     if (Number(form.buy_price) > Number(form.mrp)) { setFormError('Buy price cannot exceed MRP'); return }
+
+    // Validate IMEIs
+    const imeis = imeiList.map((i) => (i || '').replace(/\D/g, '').trim()).filter(Boolean)
+    if (editingId) {
+      // Edit mode: keep the existing IMEI, just update
+      if (imeis.length === 0) { setFormError('IMEI is required'); return }
+      if (imeis[0].length < 14) { setFormError('IMEI must be at least 14 digits'); return }
+    } else {
+      // Add mode: at least 1 IMEI required
+      if (imeis.length === 0) { setFormError('At least one IMEI is required. Click "+ Add another IMEI" to add more units.'); return }
+      for (const im of imeis) {
+        if (im.length < 14) { setFormError(`IMEI "${im}" must be at least 14 digits`); return }
+      }
+      // Check duplicates within list
+      const uniqueImeis = new Set(imeis)
+      if (uniqueImeis.size !== imeis.length) {
+        const dups = imeis.filter((im, i) => imeis.indexOf(im) !== i)
+        setFormError(`Duplicate IMEIs in list: ${[...new Set(dups)].join(', ')}`)
+        return
+      }
+    }
+
+    // Check against DB
+    const { data: existing } = await supabase
+      .from('phones')
+      .select('imei')
+      .in('imei', imeis)
+    if (existing && existing.length > 0) {
+      const existingImeis = existing.map((e) => e.imei)
+      const skip = editingId ? [form.imei] : []
+      const conflicts = existingImeis.filter((im) => !skip.includes(im))
+      if (conflicts.length > 0) {
+        setFormError(`IMEI${conflicts.length > 1 ? 's' : ''} already in system: ${conflicts.join(', ')}`)
+        return
+      }
+    }
 
     // Clean specs - drop empty values
     const cleanSpecs = {}
@@ -201,11 +238,10 @@ export function AdminInventory() {
       if (v && String(v).trim()) cleanSpecs[k] = String(v).trim()
     }
 
-    const payload = {
+    const basePayload = {
       brand: form.brand.trim(),
       model: form.model.trim(),
       variant: form.variant.trim() || 'Standard',
-      imei: form.imei.trim(),
       buy_price: Number(form.buy_price),
       mrp: Number(form.mrp),
       compare_at_price: form.compare_at_price ? Number(form.compare_at_price) : null,
@@ -220,21 +256,20 @@ export function AdminInventory() {
     }
 
     if (editingId) {
+      const payload = { ...basePayload, imei: imeis[0] }
       const { error } = await supabase.from('phones').update(payload).eq('id', editingId)
-      if (error) {
-        if (error.code === '23505') setFormError('This IMEI already exists in the system.')
-        else setFormError(error.message)
-        return
-      }
+      if (error) { setFormError(error.message); return }
       showToast('Phone updated.', 'success')
     } else {
-      const { error } = await supabase.from('phones').insert(payload)
+      // Bulk insert: one row per IMEI
+      const rows = imeis.map((imei) => ({ ...basePayload, imei }))
+      const { error } = await supabase.from('phones').insert(rows)
       if (error) {
-        if (error.code === '23505') setFormError('This IMEI already exists in the system.')
+        if (error.code === '23505') setFormError('One or more IMEIs already exist in the system.')
         else setFormError(error.message)
         return
       }
-      showToast('Phone added — it will appear on the storefront now.', 'success')
+      showToast(`${rows.length} unit${rows.length > 1 ? 's' : ''} added — visible on storefront now.`, 'success')
     }
     closeForm()
     load()
@@ -266,7 +301,16 @@ export function AdminInventory() {
       showToast(`IMEI found: ${found.brand} ${found.model} (${found.status})`, 'info')
     } else {
       showToast('New IMEI — fill in the form to add this phone', 'success')
-      setForm((f) => ({ ...f, imei: code }))
+      // Fill the first empty slot in imeiList, or append
+      setImeiList((list) => {
+        const idx = list.findIndex((i) => !i.trim())
+        if (idx >= 0) {
+          const copy = [...list]
+          copy[idx] = code
+          return copy
+        }
+        return [...list, code]
+      })
       setShowAddForm(true)
     }
   }
@@ -369,14 +413,61 @@ export function AdminInventory() {
                   </div>
                 </div>
                 <div>
-                  <label className="label">IMEI * (unique — 14-16 digits)</label>
-                  <div className="flex gap-1">
-                    <input type="text" value={form.imei} onChange={(e) => setForm((f) => ({ ...f, imei: e.target.value.replace(/\D/g, '') }))} className="input font-mono text-xs flex-1" placeholder="353000001234567" maxLength="16" />
-                    <button type="button" onClick={() => setImeiScannerOpen(true)} className="btn-secondary p-2 shrink-0" title="Scan IMEI barcode">
-                      <Camera className="w-4 h-4" />
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-medium text-sec-text">
+                      IMEIs * ({editingId ? '1 unit' : `${imeiList.length} unit${imeiList.length > 1 ? 's' : ''}`})
+                    </label>
+                    {!editingId && (
+                      <button
+                        type="button"
+                        onClick={() => setImeiList((list) => [...list, ''])}
+                        className="btn-secondary text-xs py-1 px-2 inline-flex items-center gap-1"
+                      >
+                        <Plus className="w-3 h-3" /> Add another IMEI
+                      </button>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    {imeiList.map((imei, idx) => (
+                      <div key={idx} className="flex gap-1">
+                        <span className="text-xs text-muted-text self-center w-6 shrink-0 text-right">#{idx + 1}</span>
+                        <input
+                          type="text"
+                          value={imei}
+                          onChange={(e) => {
+                            const v = e.target.value.replace(/\D/g, '')
+                            setImeiList((list) => list.map((it, i) => i === idx ? v : it))
+                          }}
+                          className="input font-mono text-xs flex-1"
+                          placeholder="353000001234567"
+                          maxLength="16"
+                          disabled={editingId && idx > 0}
+                        />
+                        {imeiList.length > 1 && !editingId && (
+                          <button
+                            type="button"
+                            onClick={() => setImeiList((list) => list.filter((_, i) => i !== idx))}
+                            className="btn-ghost p-2 shrink-0 text-danger hover:bg-danger/10"
+                            title="Remove IMEI"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-[10px] text-muted-text">
+                      Same model+variant with different IMEIs = separate stock units.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setImeiScannerOpen(true)}
+                      className="btn-secondary text-xs py-1 px-2 inline-flex items-center gap-1 shrink-0"
+                    >
+                      <Camera className="w-3 h-3" /> Scan
                     </button>
                   </div>
-                  <p className="text-[10px] text-muted-text mt-1">Each IMEI is unique. Same model+variant with different IMEIs = multiple stock units.</p>
                 </div>
                 <div>
                   <label className="label">Image URL</label>
@@ -457,7 +548,10 @@ export function AdminInventory() {
 
           <div className="flex gap-2 mt-6">
             <button onClick={save} className="btn-primary text-sm py-2 px-4 inline-flex items-center gap-2">
-              <Save className="w-4 h-4" /> {editingId ? 'Save changes' : 'Add phone to inventory + storefront'}
+              <Save className="w-4 h-4" />
+              {editingId
+                ? 'Save changes'
+                : `Add ${imeiList.filter((i) => i.trim()).length || 1} unit${imeiList.filter((i) => i.trim()).length !== 1 ? 's' : ''} to inventory + storefront`}
             </button>
             <button onClick={closeForm} className="btn-secondary text-sm py-2 px-4 inline-flex items-center gap-2">
               <X className="w-4 h-4" /> Cancel
@@ -647,8 +741,21 @@ export function AdminInventory() {
       {showScanner && <BarcodeScanner onScan={handleScanResult} onClose={() => setShowScanner(false)} title="Scan IMEI barcode" />}
       {imeiScannerOpen && (
         <BarcodeScanner
-          title="Scan IMEI for new phone"
-          onScan={(code) => { setForm((f) => ({ ...f, imei: code.replace(/\D/g, '') })); setImeiScannerOpen(false); showToast('IMEI captured', 'success') }}
+          title="Scan IMEI barcode"
+          onScan={(code) => {
+            const cleanCode = code.replace(/\D/g, '')
+            setImeiList((list) => {
+              const idx = list.findIndex((i) => !i.trim())
+              if (idx >= 0) {
+                const copy = [...list]
+                copy[idx] = cleanCode
+                return copy
+              }
+              return [...list, cleanCode]
+            })
+            setImeiScannerOpen(false)
+            showToast('IMEI added — keep scanning or save', 'success')
+          }}
           onClose={() => setImeiScannerOpen(false)}
         />
       )}
