@@ -9,6 +9,7 @@ import ReportsPage from './ReportsPage'
 import { BrandsPage } from './BrandsPage'
 import { OrdersPage } from './OrdersPage'
 import { SettingsPage } from './SettingsPage'
+import AddPhone from './AddPhone'
 
 const NAV = [
   {
@@ -192,11 +193,20 @@ export function PhoneShopAdmin() {
           <div className="md:hidden h-14" />
 
           {/* Page header */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
             <div>
               <h2 className="text-xl font-bold" style={{ color: '#E5E7EB' }}>{pageTitle}</h2>
               <p className="text-sm mt-0.5" style={{ color: '#9CA3AF' }}>{pageSub}</p>
             </div>
+            {activeTab === 'inventory' && (
+              <button
+                onClick={() => setAddOpen(true)}
+                className="btn-primary"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
+                Add Phone
+              </button>
+            )}
           </div>
 
           {activeTab === 'inventory' && <InventoryPage />}
@@ -209,6 +219,27 @@ export function PhoneShopAdmin() {
           {activeTab === 'settings' && <SettingsPage />}
         </div>
       </main>
+
+      {/* Add Phone modal — opens from the Inventory page header */}
+      {addOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
+          <div className="card w-full max-w-lg p-6 shadow-2xl bg-elev-bg my-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold" style={{ color: '#E5E7EB' }}>Add Phone to Inventory</h2>
+              <button onClick={() => setAddOpen(false)} className="btn-ghost btn-sm">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+            <p className="text-xs text-sec-text mb-4">
+              Scan or enter multiple IMEIs — one row per phone unit. Phones appear in the front shop automatically.
+            </p>
+            <AddPhone
+              onSuccess={() => { setAddOpen(false); if (typeof window !== 'undefined') window.location.reload() }}
+              onCancel={() => setAddOpen(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
