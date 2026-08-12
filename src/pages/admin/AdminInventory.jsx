@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { AdminLayout } from '../../components/admin/AdminLayout'
 import { ToastContainer, showToast } from '../../components/admin/Toast'
 import BarcodeScanner from '../../components/admin/BarcodeScanner'
-import SellPhoneModal from '../../components/admin/SellPhoneModal'
+import { SellPhoneModal } from '../../components/admin/SellPhoneModal'
 import { supabase } from '../../lib/supabase'
 import { Plus, Edit2, Save, X, Package, Search, Camera, Trash2, ShoppingCart, LayoutGrid, List as ListIcon, ScanLine, Check, AlertCircle, ChevronDown, ChevronRight } from 'lucide-react'
 
