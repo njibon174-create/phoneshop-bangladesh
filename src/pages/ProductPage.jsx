@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ChevronRight, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, Check, X, Cpu, Battery, Camera, HardDrive, Smartphone, CheckCircle2 } from 'lucide-react'
+import { ChevronRight, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, Check, Cpu, Battery, Camera, HardDrive, Smartphone, CheckCircle2 } from 'lucide-react'
 import { useCart } from '../lib/cart'
-import { BackButton } from '../components/ui/BackButton'
 import { useWishlist } from '../lib/wishlist'
+import { BackButton } from '../components/ui/BackButton'
 import { PhoneCard } from '../components/ui/PhoneCard'
 import { fetchProductBySlug, fetchProductsByBrand } from '../lib/queries'
+import { memo } from 'react'
 
 function formatPrice(bdt) {
   if (bdt == null) return '—'
@@ -19,6 +20,19 @@ const SPEC_GROUPS = [
   { keys: ['battery_mah', 'charging_w', 'wireless_charging_w'], title: 'Battery', icon: Battery },
   { keys: ['storage_gb', 'weight_g', 'ip_rating', '5g'], title: 'Build & Connectivity', icon: HardDrive },
 ]
+
+const SPEC_LABELS = {
+  display: 'Display', refresh_rate_hz: 'Refresh Rate', chip: 'Processor',
+  os: 'Operating System', ram_gb: 'RAM', storage_gb: 'Storage',
+  rear_camera: 'Rear Camera', front_camera: 'Front Camera', video_4k: 'Video',
+  battery_mah: 'Battery', charging_w: 'Charging', wireless_charging_w: 'Wireless Charging',
+  weight_g: 'Weight', ip_rating: 'IP Rating', five_g: '5G', colors: 'Colors',
+}
+
+function prettyKey(k) {
+  if (SPEC_LABELS[k]) return SPEC_LABELS[k]
+  return k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+}
 
 function pickSpec(fullSpecs, key) {
   if (!fullSpecs) return null
@@ -39,34 +53,46 @@ function groupSpecs(fullSpecs) {
   }).filter((g) => g.rows.length > 0)
 }
 
-const SPEC_LABELS = {
-  display: 'Display',
-  refresh_rate_hz: 'Refresh Rate',
-  chip: 'Processor',
-  os: 'Operating System',
-  ram_gb: 'RAM',
-  storage_gb: 'Storage',
-  rear_camera: 'Rear Camera',
-  front_camera: 'Front Camera',
-  video_4k: 'Video',
-  battery_mah: 'Battery',
-  charging_w: 'Charging',
-  wireless_charging_w: 'Wireless Charging',
-  weight_g: 'Weight',
-  ip_rating: 'IP Rating',
-  five_g: '5G',
-  colors: 'Colors',
+function ProductSkeleton() {
+  return (
+    <main className="bg-background">
+      <div className="section-container pt-6">
+        <div className="h-4 w-64 bg-surfaceElevated rounded animate-pulse mb-6" />
+      </div>
+      <div className="section-container pb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12 animate-pulse">
+          <div className="aspect-square bg-surfaceElevated rounded-2xl" />
+          <div className="space-y-4">
+            <div className="h-6 w-24 bg-surfaceElevated rounded" />
+            <div className="h-10 w-3/4 bg-surfaceElevated rounded" />
+            <div className="h-8 w-32 bg-surfaceElevated rounded" />
+            <div className="h-24 w-full bg-surfaceElevated rounded-xl" />
+            <div className="h-12 w-full bg-surfaceElevated rounded-xl" />
+          </div>
+        </div>
+      </div>
+    </main>
+  )
 }
 
-function prettyKey(k) {
-  if (SPEC_LABELS[k]) return SPEC_LABELS[k]
-  return k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+function ProductError({ message }) {
+  const navigate = useNavigate()
+  return (
+    <main className="section-container py-16 text-center">
+      <p className="text-5xl mb-4">⚠️</p>
+      <h1 className="text-2xl font-bold text-main-text mb-2">Couldn't load product</h1>
+      <p className="text-sec-text mb-6">{message}</p>
+      <button onClick={() => navigate('/')} className="btn-primary">Back to Home</button>
+    </main>
+  )
 }
 
 export function ProductPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const { has: inWishlist, toggle: toggleWish } = useWishlist()
+  const { add } = useCart()
+
   const [product, setProduct] = useState(null)
   const [related, setRelated] = useState([])
   const [loading, setLoading] = useState(true)
@@ -76,9 +102,11 @@ export function ProductPage() {
 
   useEffect(() => {
     let cancelled = false
+    setLoading(true)
+    setError(null)
+    setProduct(null)
+    setRelated([])
     async function load() {
-      setLoading(true)
-      setError(null)
       try {
         const data = await fetchProductBySlug(slug)
         if (cancelled) return
@@ -86,11 +114,15 @@ export function ProductPage() {
           setError('Product not found')
         } else {
           setProduct(data)
-          const relatedData = await fetchProductsByBrand(data.brand_slug, { limit: 4 })
-          if (!cancelled) setRelated((relatedData || []).filter((r) => r.id !== data.id).slice(0, 3))
+          try {
+            const relatedData = await fetchProductsByBrand(data.brand_slug, { limit: 4 })
+            if (!cancelled) {
+              setRelated((relatedData || []).filter((r) => r.id !== data.id).slice(0, 3))
+            }
+          } catch { /* ignore */ }
         }
       } catch (e) {
-        if (!cancelled) setError(e.message)
+        if (!cancelled) setError(e.message || 'Something went wrong')
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -99,34 +131,48 @@ export function ProductPage() {
     return () => { cancelled = true }
   }, [slug])
 
-  function share() {
-    if (navigator.share) {
-      navigator.share({ title: product.name, url: window.location.href }).catch(() => {})
-    } else {
-      navigator.clipboard.writeText(window.location.href)
+  const share = useCallback(() => {
+    const url = typeof window !== 'undefined' ? window.location.href : ''
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share({ title: product?.name || '', url }).catch(() => {})
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(url)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
-  }
+  }, [product?.name])
 
-  if (loading) return <SkeletonPage />
-  if (error) return <ErrorPage message={error} onBack={() => navigate(-1)} />
-  if (!product) return null
+  const addToCart = useCallback(() => {
+    if (!product) return
+    add({
+      slug: product.slug, id: product.id, name: product.name,
+      variant: product.variant, brand: product.brand_name,
+      image: product.primary_image_url,
+      unit_price_bdt: product.price_bdt, price_bdt: product.price_bdt,
+    }, 1)
+    setTimeout(() => navigate('/cart'), 200)
+  }, [product, add, navigate])
+
+  const specGroups = useMemo(() => groupSpecs(product?.full_specs), [product?.full_specs])
+
+  if (loading) return <ProductSkeleton />
+  if (error || !product) return <ProductError message={error || 'Product not found'} />
 
   const images = product.images?.length
     ? product.images
     : [{ url: product.primary_image_url, alt_text: product.name, is_primary: true }]
-  const stockBadge = product.stock_status === 'out_of_stock' ? { text: 'Out of Stock', cls: 'bg-error/20 text-error' }
-    : product.stock_status === 'low_stock' ? { text: 'Only ' + product.stock_count + ' left', cls: 'bg-warning/20 text-warning' }
+
+  const stockBadge = product.stock_status === 'out_of_stock'
+    ? { text: 'Out of Stock', cls: 'bg-error/20 text-error' }
+    : product.stock_status === 'low_stock'
+    ? { text: `Only ${product.stock_count} left`, cls: 'bg-warning/20 text-warning' }
     : { text: 'In Stock', cls: 'bg-success/20 text-success' }
-  const specGroups = groupSpecs(product.full_specs)
 
   return (
     <main className="bg-background">
-      {/* Breadcrumb */}
       <div className="section-container pt-6">
         <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-          <nav className="flex items-center gap-1 text-sm text-textSubtle min-w-0 flex-1">
+          <nav className="flex items-center gap-1 text-sm text-textSubtle min-w-0 flex-1" aria-label="Breadcrumb">
             <Link to="/" className="hover:text-accent">Home</Link>
             <ChevronRight className="w-3 h-3" />
             <Link to="/brands" className="hover:text-accent">Brands</Link>
@@ -135,32 +181,20 @@ export function ProductPage() {
             <ChevronRight className="w-3 h-3" />
             <span className="text-text line-clamp-1">{product.name}</span>
           </nav>
-<BackButton />
+          <BackButton />
         </div>
       </div>
 
       <div className="section-container pb-12">
-        {/* TOP: gallery + buy box */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          {/* Gallery */}
           <div>
             <div className="aspect-square bg-surfaceElevated border border-border rounded-2xl overflow-hidden mb-3">
-              <img
-                src={images[activeImage]?.url || product.primary_image_url}
-                alt={images[activeImage]?.alt_text || product.name}
-                className="w-full h-full object-contain p-6"
-              />
+              <img src={images[activeImage]?.url || product.primary_image_url} alt={images[activeImage]?.alt_text || product.name} className="w-full h-full object-contain p-6" />
             </div>
             {images.length > 1 && (
               <div className="flex gap-2 overflow-x-auto">
                 {images.map((img, i) => (
-                  <button
-                    key={img.id || i}
-                    onClick={() => setActiveImage(i)}
-                    className={`shrink-0 w-20 h-20 rounded-lg border-2 overflow-hidden transition-colors ${
-                      i === activeImage ? 'border-accent' : 'border-border hover:border-borderHover'
-                    }`}
-                  >
+                  <button key={img.id || i} onClick={() => setActiveImage(i)} className={`shrink-0 w-20 h-20 rounded-lg border-2 overflow-hidden transition-colors ${i === activeImage ? 'border-accent' : 'border-border hover:border-borderHover'}`}>
                     <img src={img.url} alt={img.alt_text || ''} className="w-full h-full object-contain p-2 bg-surfaceElevated" />
                   </button>
                 ))}
@@ -168,19 +202,15 @@ export function ProductPage() {
             )}
           </div>
 
-          {/* Buy box */}
           <div>
             <div className="flex items-center gap-2 mb-3">
               <span className="bg-accent/20 text-accent text-xs font-semibold px-2 py-1 rounded-lg">{product.brand_name}</span>
               <span className={`text-xs font-semibold px-2 py-1 rounded-lg ${stockBadge.cls}`}>{stockBadge.text}</span>
-              {product.condition && product.condition !== 'new' && (
-                <span className="bg-surfaceElevated text-textMuted text-xs font-semibold px-2 py-1 rounded-lg capitalize">{product.condition}</span>
-              )}
             </div>
-
             <h1 className="text-3xl sm:text-4xl font-bold text-text mb-2">{product.brand_name} {product.name}</h1>
-            {product.variant && <p className="text-textMuted mb-4">{product.variant}</p>}
-
+            {product.variant && product.variant !== 'Standard' && (
+              <p className="text-textMuted mb-4">{product.variant}</p>
+            )}
             <div className="flex items-baseline gap-2 mb-1">
               <span className="text-4xl font-bold text-text">{formatPrice(product.price_bdt)}</span>
               {product.compare_price_bdt && product.compare_price_bdt > product.price_bdt && (
@@ -188,87 +218,86 @@ export function ProductPage() {
               )}
             </div>
             <p className="text-xs text-textSubtle mb-6">Inclusive of VAT • Free delivery all over Bangladesh</p>
-
             {product.short_desc && (
               <p className="text-textMuted mb-6 leading-relaxed">{product.short_desc}</p>
             )}
-
-            {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
-              <AddToCartButton product={product} />
+              <button onClick={addToCart} className="btn-primary py-3.5 px-5 flex items-center justify-center gap-2">
+                <ShoppingCart className="w-4 h-4" /> Add to Cart
+              </button>
+              <button onClick={addToCart} className="btn-secondary py-3.5 px-5 flex items-center justify-center gap-2">
+                <CheckCircle2 className="w-4 h-4" /> Buy Now
+              </button>
               <button
-                onClick={() => toggleWish({
-                  id: product.id,
-                  slug: product.slug,
-                  name: product.name,
-                  variant: product.variant,
-                  brand: product.brand_name,
-                  image: product.primary_image_url,
-                  price_bdt: product.price_bdt,
-                })}
+                onClick={() => toggleWish({ id: product.id, slug: product.slug, name: product.name, variant: product.variant, brand: product.brand_name, image: product.primary_image_url, unit_price_bdt: product.price_bdt, price_bdt: product.price_bdt })}
                 className={`btn-secondary py-3.5 px-5 flex items-center justify-center gap-2 ${inWishlist(product.slug) ? 'border-danger text-danger' : ''}`}
               >
                 <Heart className={`w-5 h-5 ${inWishlist(product.slug) ? 'fill-current' : ''}`} />
                 <span className="hidden sm:inline">{inWishlist(product.slug) ? 'In Wishlist' : 'Wishlist'}</span>
               </button>
               <button onClick={share} className="btn-secondary py-3.5 px-5 flex items-center justify-center gap-2">
-                {copied ? <Check className="w-5 h-5 text-success" /> : <Share2 className="w-5 h-5" />}
+                {copied ? <Check className="w-4 h-4 text-success" /> : <Share2 className="w-4 h-4" />}
                 <span className="hidden sm:inline">{copied ? 'Copied!' : 'Share'}</span>
               </button>
             </div>
-
-            {/* Trust strip */}
             <div className="grid grid-cols-3 gap-2 p-4 bg-surface border border-border rounded-xl">
-              {[
-                { icon: Truck, label: 'Free Delivery', sub: '2-5 days' },
-                { icon: Shield, label: `${product.warranty_months || 12}mo Warranty`, sub: 'Official' },
-                { icon: RotateCcw, label: '7-Day Return', sub: 'Easy refund' },
-              ].map((it) => (
-                <div key={it.label} className="flex flex-col items-center text-center">
-                  <it.icon className="w-5 h-5 text-accent mb-1" />
-                  <p className="text-xs font-semibold text-text">{it.label}</p>
-                  <p className="text-[10px] text-textSubtle">{it.sub}</p>
-                </div>
-              ))}
+              <div className="flex flex-col items-center text-center">
+                <Truck className="w-5 h-5 text-accent mb-1" />
+                <p className="text-xs font-semibold text-text">Free Delivery</p>
+                <p className="text-[10px] text-textSubtle">2-5 days</p>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <Shield className="w-5 h-5 text-accent mb-1" />
+                <p className="text-xs font-semibold text-text">{product.warranty_months || 12}mo Warranty</p>
+                <p className="text-[10px] text-textSubtle">Official</p>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <RotateCcw className="w-5 h-5 text-accent mb-1" />
+                <p className="text-xs font-semibold text-text">7-Day Return</p>
+                <p className="text-[10px] text-textSubtle">Easy refund</p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* SPECS — progressive disclosure */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold text-text mb-6">Full Specifications</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {specGroups.map((g) => (
-              <div key={g.title} className="bg-surface border border-border rounded-2xl p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-9 h-9 bg-accent/10 rounded-lg flex items-center justify-center">
-                    <g.icon className="w-4 h-4 text-accent" />
-                  </div>
-                  <h3 className="font-semibold text-text">{g.title}</h3>
-                </div>
-                <dl className="grid grid-cols-1 gap-2">
-                  {g.rows.map((r) => (
-                    <div key={r.key} className="flex justify-between items-center text-sm py-1.5 border-b border-border/50 last:border-0">
-                      <dt className="text-textSubtle shrink-0 mr-2 text-sm">{r.label}</dt>
-                      <dd className="text-text font-medium text-right text-sm sm:text-base break-words min-w-0 max-w-[60%]">{r.value}</dd>
+        {specGroups.length > 0 && (
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold text-text mb-6">Full Specifications</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {specGroups.map((g) => (
+                <div key={g.title} className="bg-surface border border-border rounded-2xl p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-9 h-9 bg-accent/10 rounded-lg flex items-center justify-center">
+                      <g.icon className="w-4 h-4 text-accent" />
                     </div>
-                  ))}
-                </dl>
-              </div>
-            ))}
-          </div>
-          {product.long_desc && (
-            <div className="mt-6 bg-surface border border-border rounded-2xl p-5">
-              <h3 className="font-semibold text-text mb-2">Description</h3>
-              <p className="text-textMuted leading-relaxed">{product.long_desc}</p>
+                    <h3 className="font-semibold text-text">{g.title}</h3>
+                  </div>
+                  <dl className="grid grid-cols-1 gap-2">
+                    {g.rows.map((r) => (
+                      <div key={r.key} className="flex justify-between items-center text-sm py-1.5 border-b border-border/50 last:border-0">
+                        <dt className="text-textSubtle shrink-0 mr-2 text-sm">{r.label}</dt>
+                        <dd className="text-text font-medium text-right text-sm sm:text-base break-words min-w-0 max-w-[60%]">{r.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              ))}
             </div>
-          )}
-        </section>
+          </section>
+        )}
 
-        {/* RELATED */}
+        {product.long_desc && (
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold text-text mb-4">Description</h2>
+            <div className="bg-surface border border-border rounded-2xl p-5">
+              <p className="text-textMuted leading-relaxed whitespace-pre-line">{product.long_desc}</p>
+            </div>
+          </section>
+        )}
+
         {related.length > 0 && (
           <section>
-            <div className="flex items-end justify-between mb-6">
+            <div className="flex items-end justify-between mb-6 gap-3 flex-wrap">
               <h2 className="text-2xl font-bold text-text">More from {product.brand_name}</h2>
               <Link to={`/brand/${product.brand_slug}`} className="text-sm text-textMuted hover:text-accent flex items-center gap-1">
                 See all <ChevronRight className="w-4 h-4" />
@@ -278,15 +307,7 @@ export function ProductPage() {
               {related.map((p) => (
                 <PhoneCard
                   key={p.id}
-                  phone={{
-                    id: p.id,
-                    brand: p.brand_name,
-                    name: p.name,
-                    variant: p.variant,
-                    price: formatPrice(p.price_bdt),
-                    image: p.primary_image_url,
-                    slug: p.slug,
-                  }}
+                  phone={{ id: p.id, brand: p.brand_name, name: p.name, variant: p.variant, price: formatPrice(p.price_bdt), image: p.primary_image_url, slug: p.slug }}
                 />
               ))}
             </div>
@@ -294,88 +315,5 @@ export function ProductPage() {
         )}
       </div>
     </main>
-  )
-}
-
-function SkeletonPage() {
-  return (
-    <main className="section-container py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12 animate-pulse">
-        <div>
-          <div className="aspect-square bg-surfaceElevated rounded-2xl" />
-          <div className="flex gap-2 mt-3">
-            {Array.from({ length: 4 }).map((_, i) => <div key={i} className="w-20 h-20 bg-surfaceElevated rounded-lg" />)}
-          </div>
-        </div>
-        <div>
-          <div className="h-4 bg-surfaceElevated rounded w-1/4 mb-3" />
-          <div className="h-8 bg-surfaceElevated rounded w-3/4 mb-2" />
-          <div className="h-4 bg-surfaceElevated rounded w-1/2 mb-6" />
-          <div className="h-10 bg-surfaceElevated rounded w-1/3 mb-6" />
-          <div className="h-14 bg-surfaceElevated rounded mb-3" />
-          <div className="h-20 bg-surfaceElevated rounded" />
-        </div>
-      </div>
-    </main>
-  )
-}
-
-function ErrorPage({ message, onBack }) {
-  return (
-    <main className="section-container py-16 text-center">
-      <p className="text-5xl mb-4">😕</p>
-      <h2 className="text-2xl font-bold text-text mb-2">We couldn't find that phone</h2>
-      <p className="text-textMuted mb-6">{message}</p>
-      <div className="flex justify-center gap-3">
-        <button onClick={onBack} className="btn-secondary">Go back</button>
-        <Link to="/" className="btn-primary">Home</Link>
-      </div>
-    </main>
-  )
-}
-
-
-function AddToCartButton({ product }) {
-  const { add } = useCart()
-  const [added, setAdded] = useState(false)
-  const navigate = useNavigate()
-  const isOut = product.stock_status === 'out_of_stock'
-
-  function handleAdd() {
-    if (isOut) return
-    add({
-      id: product.id,
-      slug: product.slug,
-      name: product.name,
-      variant: product.variant,
-      brand: product.brand_name,
-      image: product.primary_image_url,
-      unit_price_bdt: product.price_bdt,
-    }, 1)
-    setAdded(true)
-    setTimeout(() => setAdded(false), 1500)
-  }
-
-  return (
-    <div className="flex-1 flex gap-2">
-      <button
-        onClick={handleAdd}
-        disabled={isOut}
-        className="btn-primary flex-1 text-base py-3.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {added ? (
-          <><CheckCircle2 className="w-5 h-5" /> Added!</>
-        ) : (
-          <><ShoppingCart className="w-5 h-5" /> {isOut ? 'Out of Stock' : 'Add to Cart'}</>
-        )}
-      </button>
-      <button
-        onClick={() => { handleAdd(); setTimeout(() => navigate('/cart'), 200) }}
-        disabled={isOut}
-        className="btn-secondary py-3.5 px-5 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        Buy Now
-      </button>
-    </div>
   )
 }
