@@ -1,15 +1,17 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { ShoppingCart, GitCompare, Heart, Check } from 'lucide-react'
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { useCart } from '../../lib/cart'
 import { useWishlist } from '../../lib/wishlist'
 import { add as compareAdd, has as compareHas } from '../../lib/compare'
 
-export function PhoneCard({ phone }) {
+// Memoized — phone cards re-render frequently in lists
+export const PhoneCard = memo(function PhoneCard({ phone }) {
   const navigate = useNavigate()
   const { add } = useCart()
   const { has: inWishlist, toggle: toggleWish } = useWishlist()
   const [added, setAdded] = useState(false)
+
   const slug = phone.slug || phone.id
   const isInCompare = compareHas(slug)
   const isInWish = inWishlist(slug)
@@ -26,18 +28,8 @@ export function PhoneCard({ phone }) {
     price_bdt: phone.price_bdt ?? phone.unit_price_bdt,
   }
 
-  // Card click handler. The only place that navigates to product.
-  // Inner buttons/links must call e.stopPropagation() so the card handler
-  // does not also fire (double navigation).
-  function handleCardClick(e) {
-    // Bail if the click was on an interactive element (button, link, label, etc.)
-    const interactive = e.target.closest('button, a, input, select, textarea, label')
-    if (interactive) return
-    // Otherwise navigate
-    navigate(productHref)
-  }
-
   function handleBuy(e) {
+    e.preventDefault()
     e.stopPropagation()
     add(productData, 1)
     setAdded(true)
@@ -45,24 +37,28 @@ export function PhoneCard({ phone }) {
   }
 
   function handleCompare(e) {
+    e.preventDefault()
     e.stopPropagation()
     const ok = compareAdd(productData)
     if (ok) navigate('/compare')
   }
 
   function handleWish(e) {
+    e.preventDefault()
     e.stopPropagation()
     toggleWish(productData)
   }
 
+  // The entire card is wrapped in a Link. Inner buttons use e.preventDefault()
+  // to suppress the link navigation when they are clicked.
   return (
-    <div
-      className="card p-5 relative group cursor-pointer select-none"
-      onClick={handleCardClick}
+    <Link
+      to={productHref}
+      className="card p-5 relative group block transition-transform hover:-translate-y-0.5"
       role="article"
       aria-label={`View ${phone.name} details`}
     >
-      {/* Image (not a link — card click handles navigation) */}
+      {/* Image */}
       <div className="aspect-square bg-surfaceElevated rounded-xl flex items-center justify-center mb-4 overflow-hidden">
         {phone.image ? (
           <img
@@ -79,9 +75,7 @@ export function PhoneCard({ phone }) {
       <div className="inline-block bg-accent/20 text-accent text-xs font-semibold px-2 py-1 rounded-lg mb-2">
         {phone.brand}
       </div>
-      <h3 className="font-semibold text-text text-base mb-1 line-clamp-1">
-        {phone.name}
-      </h3>
+      <h3 className="font-semibold text-text text-base mb-1 line-clamp-1">{phone.name}</h3>
       <p className="text-textMuted text-sm mb-3">{phone.variant}</p>
       <div className="flex items-baseline gap-2 mb-3">
         <span className="text-xl font-bold text-text">{phone.price}</span>
@@ -91,7 +85,7 @@ export function PhoneCard({ phone }) {
         <span className="text-xs text-textSubtle">BDT</span>
       </div>
 
-      {/* Floating action buttons (top-right) — stop propagation */}
+      {/* Floating action buttons (top-right) — preventDefault to not navigate */}
       <div className="absolute top-3 right-3 flex flex-col gap-1.5 opacity-70 group-hover:opacity-100 transition-opacity z-10">
         <button
           type="button"
@@ -119,14 +113,11 @@ export function PhoneCard({ phone }) {
         </button>
       </div>
 
-      {/* Bottom CTAs — stop propagation so the card click does not double-fire */}
+      {/* Bottom CTAs — Buy button preventDefault to not navigate */}
       <div className="flex gap-2 relative z-10">
-        <Link
-          to={productHref}
-          className="btn-primary flex-1 py-2 text-sm text-center"
-        >
+        <span className="btn-primary flex-1 py-2 text-sm text-center select-none">
           View
-        </Link>
+        </span>
         <button
           type="button"
           onClick={handleBuy}
@@ -143,6 +134,6 @@ export function PhoneCard({ phone }) {
           )}
         </button>
       </div>
-    </div>
+    </Link>
   )
-}
+})
