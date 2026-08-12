@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PhoneCard } from '../components/ui/PhoneCard'
 import { fetchBrands, fetchFeaturedProducts } from '../lib/queries'
-import { Sparkles, Zap, Shield, Truck, BadgeCheck, ChevronRight, ArrowRight, MessageCircle, Phone } from 'lucide-react'
+import { Sparkles, Zap, Shield, Truck, BadgeCheck, ChevronRight, ArrowRight, MessageCircle, Phone, MapPin } from 'lucide-react'
 
 function formatPrice(bdt) {
   if (bdt == null) return '—'
