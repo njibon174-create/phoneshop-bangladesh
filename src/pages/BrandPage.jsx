@@ -1,7 +1,7 @@
 import { BackButton } from '../components/ui/BackButton'
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams, Link } from 'react-router-dom'
-import { SlidersHorizontal, X, ChevronRight, ChevronLeft, ArrowLeft } from 'lucide-react'
+import { SlidersHorizontal, X, ChevronRight, ChevronLeft } from 'lucide-react'
 import { PhoneCard } from '../components/ui/PhoneCard'
 import { FilterSidebar } from '../components/ui/FilterSidebar'
 import { useProductFilters } from '../lib/useFilters'

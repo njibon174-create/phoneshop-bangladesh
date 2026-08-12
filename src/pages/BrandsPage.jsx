@@ -1,7 +1,7 @@
 import { BackButton } from '../components/ui/BackButton'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Smartphone, ChevronLeft } from 'lucide-react'
+import { Smartphone, ChevronLeft, ChevronRight } from 'lucide-react'
 import { fetchBrands } from '../lib/queries'
 
 
