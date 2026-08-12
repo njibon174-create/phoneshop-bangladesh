@@ -160,7 +160,7 @@ export async function createOrder({ customer, items, deliveryMethod = 'home' }) 
 }
 
 /**
- * Generate order number like BD-20250812-0001
+ * Generate order number like BD-20260812-0001
  * Reads max sequence from existing orders for today.
  */
 async function generateOrderNumber() {

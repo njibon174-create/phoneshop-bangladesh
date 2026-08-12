@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Menu, X, Search, ShoppingCart, Smartphone, ChevronDown } from 'lucide-react'
+import { Menu, X, Search, ShoppingCart, Smartphone, ChevronDown, Heart, GitCompare } from 'lucide-react'
 import { fetchBrands } from '../../lib/queries'
 import { useCart } from '../../lib/cart'
+import { useWishlist } from '../../lib/wishlist'
+import { getItems as getCompareItems, subscribe as compareSubscribe } from '../../lib/compare'
+import { useSyncExternalStore } from 'react'
 
 const FALLBACK_BRANDS = [
   { name: 'Apple', slug: 'apple' }, { name: 'Samsung', slug: 'samsung' },
@@ -15,6 +18,8 @@ const FALLBACK_BRANDS = [
 export function Header() {
   const navigate = useNavigate()
   const { itemCount } = useCart()
+  const { count: wishCount } = useWishlist()
+  const compareItems = useSyncExternalStore(compareSubscribe, getCompareItems, getCompareItems)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [brandsOpen, setBrandsOpen] = useState(false)
   const [brands, setBrands] = useState(FALLBACK_BRANDS)
@@ -101,6 +106,18 @@ export function Header() {
                 <Search className="w-5 h-5" />
               </button>
             )}
+            <Link to="/wishlist" className="btn-ghost p-2 relative hidden sm:flex" aria-label="Wishlist">
+              <Heart className="w-5 h-5" />
+              {wishCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-neon-green text-black text-[10px] font-bold rounded-full flex items-center justify-center">{wishCount}</span>
+              )}
+            </Link>
+            <Link to="/compare" className="btn-ghost p-2 relative hidden sm:flex" aria-label="Compare">
+              <GitCompare className="w-5 h-5" />
+              {compareItems.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-neon-green text-black text-[10px] font-bold rounded-full flex items-center justify-center">{compareItems.length}</span>
+              )}
+            </Link>
             <Link to="/cart" className="btn-ghost p-2 relative" aria-label="Cart">
               <ShoppingCart className="w-5 h-5" />
               {itemCount > 0 && (

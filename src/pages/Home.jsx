@@ -82,7 +82,7 @@ export function Home() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 bg-neon-green/10 border border-neon-green/30 text-neon-green text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
               <span className="w-2 h-2 bg-neon-green rounded-full animate-pulse shadow-neon-green" />
-              New Season Collection 2025
+              New Season Collection 2026
             </div>
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-main-text leading-[1.05] mb-6">
               Bangladesh's

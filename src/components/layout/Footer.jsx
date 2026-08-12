@@ -4,8 +4,10 @@ const FOOTER_LINKS = {
   shop: [
     { label: 'All Brands', href: '/brands' },
     { label: 'New Arrivals', href: '/new' },
-    { label: 'Compare Phones', href: '/compare' },
-    { label: 'Price Drops', href: '/deals' },
+    { label: 'Deals', href: '/deals' },
+    { label: 'Compare', href: '/compare' },
+    { label: 'Wishlist', href: '/wishlist' },
+    { label: 'Track Order', href: '/track' },
   ],
   support: [
     { label: 'Contact Us', href: '/support' },
@@ -77,8 +79,14 @@ export function Footer() {
           </div>
         </div>
         <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-textSubtle">© 2025 PhoneShop BD. All rights reserved. Dhaka, Bangladesh.</p>
-          <p className="text-xs text-textSubtle">Payment: Cash on Delivery • Home Delivery • Shop Pickup</p>
+          <p className="text-xs text-textSubtle">© 2026 PhoneShop BD. All rights reserved. Dhaka, Bangladesh.</p>
+          <div className="flex items-center gap-4 text-xs text-textSubtle">
+            <a href="/delivery" className="hover:text-neon-green">Delivery</a>
+            <a href="/warranty" className="hover:text-neon-green">Warranty</a>
+            <a href="/returns" className="hover:text-neon-green">Returns</a>
+            <a href="/privacy" className="hover:text-neon-green">Privacy</a>
+            <a href="/terms" className="hover:text-neon-green">Terms</a>
+          </div>
         </div>
       </div>
     </footer>
