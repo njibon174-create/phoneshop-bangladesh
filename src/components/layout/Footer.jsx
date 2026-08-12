@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Smartphone } from 'lucide-react'
 
 const FOOTER_LINKS = {
@@ -57,7 +58,7 @@ export function Footer() {
             <h4 className="text-sm font-semibold text-text mb-4">Shop</h4>
             <ul className="space-y-2">
               {FOOTER_LINKS.shop.map((l) => (
-                <li key={l.href}><a href={l.href} className="text-sm text-textMuted hover:text-accent transition-colors">{l.label}</a></li>
+                <li key={l.href}><Link to={l.href} className="text-sm text-textMuted hover:text-accent transition-colors">{l.label}</Link></li>
               ))}
             </ul>
           </div>
@@ -65,7 +66,7 @@ export function Footer() {
             <h4 className="text-sm font-semibold text-text mb-4">Support</h4>
             <ul className="space-y-2">
               {FOOTER_LINKS.support.map((l) => (
-                <li key={l.href}><a href={l.href} className="text-sm text-textMuted hover:text-accent transition-colors">{l.label}</a></li>
+                <li key={l.href}><Link to={l.href} className="text-sm text-textMuted hover:text-accent transition-colors">{l.label}</Link></li>
               ))}
             </ul>
           </div>
@@ -73,7 +74,7 @@ export function Footer() {
             <h4 className="text-sm font-semibold text-text mb-4">Company</h4>
             <ul className="space-y-2">
               {FOOTER_LINKS.company.map((l) => (
-                <li key={l.href}><a href={l.href} className="text-sm text-textMuted hover:text-accent transition-colors">{l.label}</a></li>
+                <li key={l.href}><Link to={l.href} className="text-sm text-textMuted hover:text-accent transition-colors">{l.label}</Link></li>
               ))}
             </ul>
           </div>
@@ -81,11 +82,11 @@ export function Footer() {
         <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-textSubtle">© 2026 PhoneShop BD. All rights reserved. Dhaka, Bangladesh.</p>
           <div className="flex items-center gap-x-4 gap-y-2 flex-wrap text-xs text-textSubtle">
-            <a href="/delivery" className="hover:text-neon-green">Delivery</a>
-            <a href="/warranty" className="hover:text-neon-green">Warranty</a>
-            <a href="/returns" className="hover:text-neon-green">Returns</a>
-            <a href="/privacy" className="hover:text-neon-green">Privacy</a>
-            <a href="/terms" className="hover:text-neon-green">Terms</a>
+            <Link to="/delivery" className="hover:text-neon-green">Delivery</Link>
+            <Link to="/warranty" className="hover:text-neon-green">Warranty</Link>
+            <Link to="/returns" className="hover:text-neon-green">Returns</Link>
+            <Link to="/privacy" className="hover:text-neon-green">Privacy</Link>
+            <Link to="/terms" className="hover:text-neon-green">Terms</Link>
           </div>
         </div>
       </div>

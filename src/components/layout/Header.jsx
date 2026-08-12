@@ -42,12 +42,12 @@ export function Header() {
     <header className="sticky top-0 z-40 glass">
       <div className="section-container">
         <div className="flex items-center justify-between h-16">
-          <a href="/" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{background: 'linear-gradient(135deg, #00FF88, #00D4FF)'}}>
               <Smartphone className="w-4 h-4 text-black" />
             </div>
             <span className="font-bold text-lg text-main-text hidden sm:block">PhoneShop BD</span>
-          </a>
+          </Link>
 
           <nav className="hidden lg:flex items-center gap-1">
             <div
@@ -62,21 +62,21 @@ export function Header() {
                 <div className="absolute top-full left-0 pt-1 w-48">
                   <div className="bg-surfaceElevated border border-border rounded-xl shadow-cardHover py-2 animate-scale-in">
                     {brands.map((b) => (
-                      <a
+                      <Link
                         key={b.slug}
-                        href={`/brand/${b.slug}`}
+                        to={`/brand/${b.slug}`}
                         className="block px-4 py-2 text-sm text-textMuted hover:text-text hover:bg-surface transition-colors"
                       >
                         {b.name}
-                      </a>
+                      </Link>
                     ))}
                   </div>
                 </div>
               )}
             </div>
-            <a href="/deals" className="btn-ghost text-sm">Deals</a>
-            <a href="/compare" className="btn-ghost text-sm">Compare</a>
-            <a href="/support" className="btn-ghost text-sm">Support</a>
+            <Link to="/deals" className="btn-ghost text-sm">Deals</Link>
+            <Link to="/compare" className="btn-ghost text-sm">Compare</Link>
+            <Link to="/support" className="btn-ghost text-sm">Support</Link>
           </nav>
 
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
@@ -142,16 +142,16 @@ export function Header() {
               <p className="text-xs text-textSubtle font-medium mb-2 px-2">BRANDS</p>
               <div className="flex flex-wrap gap-1">
                 {brands.map((b) => (
-                  <a key={b.slug} href={`/brand/${b.slug}`} onClick={() => setMobileOpen(false)} className="text-xs bg-surfaceElevated px-3 py-1.5 rounded-lg text-textMuted hover:text-text border border-border">
+                  <Link key={b.slug} to={`/brand/${b.slug}`} onClick={() => setMobileOpen(false)} className="text-xs bg-surfaceElevated px-3 py-1.5 rounded-lg text-textMuted hover:text-text border border-border">
                     {b.name}
-                  </a>
+                  </Link>
                 ))}
               </div>
             </div>
             <div className="space-y-1">
-              <a href="/deals" onClick={() => setMobileOpen(false)} className="block px-2 py-2 text-sm text-textMuted hover:text-text">Deals</a>
-              <a href="/compare" onClick={() => setMobileOpen(false)} className="block px-2 py-2 text-sm text-textMuted hover:text-text">Compare</a>
-              <a href="/support" onClick={() => setMobileOpen(false)} className="block px-2 py-2 text-sm text-textMuted hover:text-text">Support</a>
+              <Link to="/deals" onClick={() => setMobileOpen(false)} className="block px-2 py-2 text-sm text-textMuted hover:text-text">Deals</Link>
+              <Link to="/compare" onClick={() => setMobileOpen(false)} className="block px-2 py-2 text-sm text-textMuted hover:text-text">Compare</Link>
+              <Link to="/support" onClick={() => setMobileOpen(false)} className="block px-2 py-2 text-sm text-textMuted hover:text-text">Support</Link>
             </div>
           </div>
         </div>

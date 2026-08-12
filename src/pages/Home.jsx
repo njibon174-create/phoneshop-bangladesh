@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { ArrowRight, ChevronRight, Sparkles, Zap, Shield, Truck, BadgeCheck, MessageCircle } from 'lucide-react'
 import { PhoneCard } from '../components/ui/PhoneCard'
 import { fetchBrands, fetchFeaturedProducts } from '../lib/queries'
@@ -66,12 +67,12 @@ export function Home() {
               From the latest iPhone to budget-friendly smartphones — authentic products, official warranty, and fast delivery across Bangladesh.
             </p>
             <div className="flex flex-wrap gap-4">
-              <a href="/brands" className="btn-primary text-base px-8 py-3.5 animate-pulse-glow flex items-center gap-2">
+              <Link to="/brands" className="btn-primary text-base px-8 py-3.5 animate-pulse-glow flex items-center gap-2">
                 Shop Now <ArrowRight className="w-5 h-5" />
-              </a>
-              <a href="/compare" className="btn-secondary text-base px-8 py-3.5 inline-flex items-center justify-center">
+              </Link>
+              <Link to="/compare" className="btn-secondary text-base px-8 py-3.5 inline-flex items-center justify-center">
                 Compare Phones
-              </a>
+              </Link>
             </div>
             <div className="flex flex-wrap gap-6 mt-10">
               {[
@@ -101,9 +102,9 @@ export function Home() {
               <p className="text-xs text-muted-text">Loading brands…</p>
             ) : (
               brands.map((b) => (
-                <a key={b.slug || b.name || b} href={`/brand/${b.slug || (b.name || b).toLowerCase()}`} className="text-sm font-bold text-sec-text hover:text-neon-green transition-colors duration-200">
+                <Link key={b.slug || b.name || b} to={`/brand/${b.slug || (b.name || b).toLowerCase()}`} className="text-sm font-bold text-sec-text hover:text-neon-green transition-colors duration-200">
                   {b.name || b}
-                </a>
+                </Link>
               ))
             )}
           </div>
@@ -121,9 +122,9 @@ export function Home() {
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold text-main-text">Trending Phones</h2>
             </div>
-            <a href="/brands" className="hidden sm:flex items-center gap-1 text-sm text-sec-text hover:text-neon-blue transition-colors">
+            <Link to="/brands" className="hidden sm:flex items-center gap-1 text-sm text-sec-text hover:text-neon-blue transition-colors">
               View All <ChevronRight className="w-4 h-4" />
-            </a>
+            </Link>
           </div>
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">

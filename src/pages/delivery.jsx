@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { InfoPage } from '../components/ui/InfoPage'
 
 export function DeliveryPage() {
@@ -11,13 +12,13 @@ export function DeliveryPage() {
       <p>We deliver to all 64 districts of Bangladesh through our courier partners. Major cities (Dhaka, Chittagong, Sylhet, Rajshahi, Khulna, Barisal, Rangpur, Mymensingh) typically receive orders within 2-3 days. Other districts take 3-5 days.</p>
 
       <h2>Order Tracking</h2>
-      <p>After you place an order, we'll call you within 1 hour to confirm. Once dispatched, you'll receive a tracking number via SMS. You can also use our <a href="/track">order tracking</a> page to check status.</p>
+      <p>After you place an order, we'll call you within 1 hour to confirm. Once dispatched, you'll receive a tracking number via SMS. You can also use our <Link to="/track">order tracking</Link> page to check status.</p>
 
       <h2>Delivery Hours</h2>
       <p>Standard deliveries happen between 10:00 AM and 8:00 PM, seven days a week. For specific time slots, please add a note during checkout.</p>
 
       <h2>Free Delivery</h2>
-      <p>Orders with shop pickup are always free. We also offer free standard delivery on promotional campaigns — watch our <a href="/deals">deals page</a>.</p>
+      <p>Orders with shop pickup are always free. We also offer free standard delivery on promotional campaigns — watch our <Link to="/deals">deals page</Link>.</p>
 
       <h2>Need help?</h2>
       <p>Contact us on WhatsApp or call <strong>+880 1700-000000</strong> for any delivery questions.</p>
