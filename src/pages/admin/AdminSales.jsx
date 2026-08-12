@@ -180,7 +180,7 @@ export function AdminSales() {
     }>
       <ToastContainer />
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
         <div className="card p-4"><p className="text-xs text-sec-text uppercase">Sales</p><p className="text-2xl font-bold text-main-text">{filtered.length}</p></div>
         <div className="card p-4"><p className="text-xs text-sec-text uppercase">Revenue</p><p className="text-2xl font-bold text-neon-green">{formatBDT(totalRevenue)}</p></div>
         <div className="card p-4"><p className="text-xs text-sec-text uppercase">Profit</p><p className="text-2xl font-bold text-neon-blue">{formatBDT(totalProfit)}</p></div>

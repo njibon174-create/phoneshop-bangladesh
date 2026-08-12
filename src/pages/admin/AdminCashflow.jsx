@@ -117,7 +117,7 @@ export function AdminCashflow() {
     }>
       <ToastContainer />
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 mb-6">
         <div className="card p-4"><p className="text-xs text-sec-text uppercase">Total In</p><p className="text-xl font-bold text-neon-green flex items-center gap-1"><ArrowDown className="w-4 h-4" />{formatBDT(totalIn)}</p></div>
         <div className="card p-4"><p className="text-xs text-sec-text uppercase">Total Out</p><p className="text-xl font-bold text-danger flex items-center gap-1"><ArrowUp className="w-4 h-4" />{formatBDT(totalOut)}</p></div>
         <div className="card p-4"><p className="text-xs text-sec-text uppercase">Balance</p><p className={`text-xl font-bold ${balance >= 0 ? 'text-main-text' : 'text-danger'}`}>{formatBDT(balance)}</p></div>

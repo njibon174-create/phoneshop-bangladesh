@@ -122,7 +122,7 @@ export function AdminDues() {
     }>
       <ToastContainer />
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <div className="card p-4"><p className="text-xs text-sec-text uppercase">Outstanding</p><p className="text-2xl font-bold text-warning">{formatBDT(totalDue)}</p></div>
         <div className="card p-4"><p className="text-xs text-sec-text uppercase">Collected</p><p className="text-2xl font-bold text-neon-green">{formatBDT(totalCollected)}</p></div>
         <div className="card p-4"><p className="text-xs text-sec-text uppercase">Pending / Partial</p><p className="text-2xl font-bold text-main-text">{pendingCount} / {partialCount}</p></div>

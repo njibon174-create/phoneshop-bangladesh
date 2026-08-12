@@ -345,7 +345,7 @@ export function AdminInventory() {
     }>
       <ToastContainer />
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 mb-6">
         <div className="card p-4">
           <p className="text-xs text-sec-text uppercase">Storefront products</p>
           <p className="text-xl font-bold text-main-text">{storefrontProductCount}</p>
@@ -536,7 +536,7 @@ export function AdminInventory() {
           <div className="mt-6">
             <h4 className="text-sm font-semibold text-main-text mb-3">Specifications</h4>
             <p className="text-xs text-muted-text mb-3">Fill in what you know — these appear on the product detail page. Empty fields are hidden.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
               {SPEC_FIELDS.map(([key, label]) => (
                 <div key={key}>
                   <label className="label">{label}</label>

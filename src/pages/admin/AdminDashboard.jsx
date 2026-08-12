@@ -88,7 +88,7 @@ export function AdminDashboard() {
   return (
     <AdminLayout title="Dashboard" subtitle="Real-time overview of your shop">
       {loading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="card p-5 animate-pulse">
               <div className="h-4 bg-surfaceElevated rounded w-1/2 mb-3" />
@@ -98,7 +98,7 @@ export function AdminDashboard() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
             <StatCard icon={<DollarSign className="w-4 h-4" />} label="Sales today" value={formatBDT(stats.todaySales)} color="neon-green" />
             <StatCard icon={<TrendingUp className="w-4 h-4" />} label="Sales this month" value={formatBDT(stats.monthSales)} color="neon-blue" />
             <StatCard icon={<ShoppingCart className="w-4 h-4" />} label="Pending orders" value={stats.pendingOrders} color={stats.pendingOrders > 0 ? 'warning' : 'muted'} />
@@ -109,7 +109,7 @@ export function AdminDashboard() {
             <StatCard icon={<DollarSign className="w-4 h-4" />} label="Cash balance (mo)" value={formatBDT(stats.cashBalance)} color={stats.cashBalance >= 0 ? 'neon-green' : 'danger'} />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
             {/* Recent orders */}
             <div className="card p-5">
               <div className="flex items-center justify-between mb-4">

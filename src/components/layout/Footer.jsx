@@ -80,7 +80,7 @@ export function Footer() {
         </div>
         <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-textSubtle">© 2026 PhoneShop BD. All rights reserved. Dhaka, Bangladesh.</p>
-          <div className="flex items-center gap-4 text-xs text-textSubtle">
+          <div className="flex items-center gap-x-4 gap-y-2 flex-wrap text-xs text-textSubtle">
             <a href="/delivery" className="hover:text-neon-green">Delivery</a>
             <a href="/warranty" className="hover:text-neon-green">Warranty</a>
             <a href="/returns" className="hover:text-neon-green">Returns</a>

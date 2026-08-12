@@ -2,7 +2,7 @@ import React from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAdmin } from '../../lib/admin/auth'
 import { LogOut, Shield, Menu, X } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const NAV = [
   { to: '/admin', label: 'Dashboard', icon: '📊', end: true },
@@ -21,6 +21,15 @@ export function AdminLayout({ children, title, subtitle, actions }) {
   const { logout } = useAdmin()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [sidebarOpen])
 
   function handleLogout() {
     logout()
@@ -81,7 +90,7 @@ export function AdminLayout({ children, title, subtitle, actions }) {
 
       {/* Mobile backdrop */}
       {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/60 z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-25 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Main */}

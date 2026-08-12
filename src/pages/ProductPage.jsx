@@ -225,8 +225,8 @@ export function ProductPage() {
                 <dl className="grid grid-cols-1 gap-2">
                   {g.rows.map((r) => (
                     <div key={r.key} className="flex justify-between items-center text-sm py-1.5 border-b border-border/50 last:border-0">
-                      <dt className="text-textSubtle">{r.label}</dt>
-                      <dd className="text-text font-medium text-right">{r.value}</dd>
+                      <dt className="text-textSubtle shrink-0 mr-2 text-sm">{r.label}</dt>
+                      <dd className="text-text font-medium text-right text-sm sm:text-base break-words min-w-0 max-w-[60%]">{r.value}</dd>
                     </div>
                   ))}
                 </dl>

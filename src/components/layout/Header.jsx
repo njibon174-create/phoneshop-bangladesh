@@ -87,7 +87,7 @@ export function Header() {
             <a href="/support" className="btn-ghost text-sm">Support</a>
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {searchOpen ? (
               <form onSubmit={submitSearch} className="flex items-center gap-1 bg-surfaceElevated border border-border rounded-lg px-3 py-1.5">
                 <Search className="w-4 h-4 text-textSubtle" />
@@ -96,7 +96,7 @@ export function Header() {
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   placeholder="Search phones..."
-                  className="bg-transparent text-sm text-text outline-none w-32 sm:w-48 placeholder:text-textSubtle"
+                  className="bg-transparent text-sm text-text outline-none w-24 sm:w-40 lg:w-56 placeholder:text-textSubtle"
                   autoFocus
                   onBlur={() => !searchInput && setSearchOpen(false)}
                 />
@@ -109,19 +109,19 @@ export function Header() {
             <Link to="/wishlist" className="btn-ghost p-2 relative hidden sm:flex" aria-label="Wishlist">
               <Heart className="w-5 h-5" />
               {wishCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-neon-green text-black text-[10px] font-bold rounded-full flex items-center justify-center">{wishCount}</span>
+                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-neon-green text-black text-[10px] font-bold rounded-full flex items-center justify-center">{wishCount > 99 ? "99+" : wishCount}</span>
               )}
             </Link>
             <Link to="/compare" className="btn-ghost p-2 relative hidden sm:flex" aria-label="Compare">
               <GitCompare className="w-5 h-5" />
               {compareItems.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-neon-green text-black text-[10px] font-bold rounded-full flex items-center justify-center">{compareItems.length}</span>
+                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-neon-green text-black text-[10px] font-bold rounded-full flex items-center justify-center">{compareItems.length > 99 ? "99+" : compareItems.length}</span>
               )}
             </Link>
             <Link to="/cart" className="btn-ghost p-2 relative" aria-label="Cart">
               <ShoppingCart className="w-5 h-5" />
               {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-neon-green text-black text-[10px] font-bold rounded-full flex items-center justify-center">{itemCount}</span>
+                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-neon-green text-black text-[10px] font-bold rounded-full flex items-center justify-center">{itemCount > 99 ? "99+" : itemCount}</span>
               )}
             </Link>
             <button onClick={() => setMobileOpen(!mobileOpen)} className="btn-ghost p-2 lg:hidden" aria-label="Menu">
@@ -150,16 +150,16 @@ export function Header() {
               <p className="text-xs text-textSubtle font-medium mb-2 px-2">BRANDS</p>
               <div className="flex flex-wrap gap-1">
                 {brands.map((b) => (
-                  <a key={b.slug} href={`/brand/${b.slug}`} className="text-xs bg-surfaceElevated px-3 py-1.5 rounded-lg text-textMuted hover:text-text border border-border">
+                  <a key={b.slug} href={`/brand/${b.slug}`} onClick={() => setMobileOpen(false)} className="text-xs bg-surfaceElevated px-3 py-1.5 rounded-lg text-textMuted hover:text-text border border-border">
                     {b.name}
                   </a>
                 ))}
               </div>
             </div>
             <div className="space-y-1">
-              <a href="/deals" className="block px-2 py-2 text-sm text-textMuted hover:text-text">Deals</a>
-              <a href="/compare" className="block px-2 py-2 text-sm text-textMuted hover:text-text">Compare</a>
-              <a href="/support" className="block px-2 py-2 text-sm text-textMuted hover:text-text">Support</a>
+              <a href="/deals" onClick={() => setMobileOpen(false)} className="block px-2 py-2 text-sm text-textMuted hover:text-text">Deals</a>
+              <a href="/compare" onClick={() => setMobileOpen(false)} className="block px-2 py-2 text-sm text-textMuted hover:text-text">Compare</a>
+              <a href="/support" onClick={() => setMobileOpen(false)} className="block px-2 py-2 text-sm text-textMuted hover:text-text">Support</a>
             </div>
           </div>
         </div>
