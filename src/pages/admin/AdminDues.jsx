@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { AdminLayout } from '../../components/admin/AdminLayout'
 import { ToastContainer, showToast } from '../../components/admin/Toast'
 import { supabase } from '../../lib/supabase'
-import { Plus, DollarSign, X, Save, ChevronDown, ChevronRight, Phone, Calendar, Ban } from 'lucide-react'
+import { DollarSign, X, Save, ChevronDown, ChevronRight, Phone, Calendar, Ban } from 'lucide-react'
 
 function formatBDT(n) {
   return '\u09F3' + Number(n || 0).toLocaleString('en-IN')
@@ -20,12 +20,10 @@ export function AdminDues() {
   const [phones, setPhones] = useState({})
   const [payments, setPayments] = useState({})
   const [loading, setLoading] = useState(true)
-  const [creating, setCreating] = useState(false)
   const [paying, setPaying] = useState(null)
   const [payAmount, setPayAmount] = useState(0)
   const [payNote, setPayNote] = useState('')
   const [expanded, setExpanded] = useState({})
-  const [form, setForm] = useState({ customer_name: '', customer_phone: '', total_due: 0, notes: '' })
 
   async function load() {
     setLoading(true)
@@ -56,24 +54,6 @@ export function AdminDues() {
   }
 
   useEffect(() => { load() }, [])
-
-  async function create() {
-    if (!form.customer_name || form.total_due <= 0) return
-    const { error } = await supabase.from('credits').insert({
-      customer_name: form.customer_name.trim(),
-      customer_phone: form.customer_phone.trim() || null,
-      total_due: Number(form.total_due),
-      paid_amount: 0,
-      remaining: Number(form.total_due),
-      notes: form.notes.trim() || null,
-      status: 'pending',
-    })
-    if (error) { showToast('Failed: ' + error.message, 'error'); return }
-    setCreating(false)
-    setForm({ customer_name: '', customer_phone: '', total_due: 0, notes: '' })
-    showToast('Credit added.', 'success')
-    load()
-  }
 
   async function recordPayment() {
     if (!paying || payAmount <= 0) return
@@ -117,9 +97,7 @@ export function AdminDues() {
   const overdueCount = credits.filter((c) => c.remaining > 0 && c.status !== 'cancelled' && c.status !== 'cleared' && new Date(c.created_at) < new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length
 
   return (
-    <AdminLayout title="Dues (Baki)" subtitle="Customer credits and outstanding payments" actions={
-      !creating && <button onClick={() => setCreating(true)} className="btn-primary inline-flex items-center gap-2 text-sm py-2 px-4"><Plus className="w-4 h-4" /> Add Credit</button>
-    }>
+    <AdminLayout title="Dues (Baki)" subtitle="Customer credits and outstanding payments (auto-generated from sales)">
       <ToastContainer />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
@@ -128,23 +106,6 @@ export function AdminDues() {
         <div className="card p-4"><p className="text-xs text-sec-text uppercase">Pending / Partial</p><p className="text-2xl font-bold text-main-text">{pendingCount} / {partialCount}</p></div>
         <div className="card p-4"><p className="text-xs text-sec-text uppercase">Over 30 days</p><p className="text-2xl font-bold text-danger">{overdueCount}</p></div>
       </div>
-
-      {creating && (
-        <div className="card p-5 mb-4">
-          <h3 className="font-semibold text-main-text mb-3">New credit</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div><label className="block text-xs font-medium text-sec-text mb-1.5">Customer name *</label><input type="text" value={form.customer_name} onChange={(e) => setForm((f) => ({ ...f, customer_name: e.target.value }))} className="input" /></div>
-            <div><label className="block text-xs font-medium text-sec-text mb-1.5">Phone</label><input type="text" value={form.customer_phone} onChange={(e) => setForm((f) => ({ ...f, customer_phone: e.target.value }))} className="input" /></div>
-            <div><label className="block text-xs font-medium text-sec-text mb-1.5">Total due *</label><input type="number" value={form.total_due} onChange={(e) => setForm((f) => ({ ...f, total_due: e.target.value }))} className="input" /></div>
-            <div><label className="block text-xs font-medium text-sec-text mb-1.5">Notes</label><input type="text" value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} className="input" /></div>
-          </div>
-          <div className="flex gap-2 mt-4">
-            <button onClick={create} className="btn-primary text-sm py-2 px-4 flex items-center gap-2"><Save className="w-4 h-4" /> Create</button>
-            <button onClick={() => setCreating(false)} className="btn-secondary text-sm py-2 px-4 flex items-center gap-2"><X className="w-4 h-4" /> Cancel</button>
-          </div>
-        </div>
-      )}
-
       {paying && (
         <div className="card p-5 mb-4 border-neon-green/30">
           <h3 className="font-semibold text-main-text mb-3">Record payment from {paying.customer_name}</h3>
@@ -213,12 +174,12 @@ export function AdminDues() {
                     )}
                     <div className="flex gap-2 pt-2 border-t border-border">
                       {c.remaining > 0 && c.status !== 'cancelled' && (
-                        <button onClick={() => { setPaying(c); setPayAmount(Number(c.remaining)) }} className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1"><DollarSign className="w-3 h-3" /> Record Payment</button>
+                        <button onClick={() => { setPaying(c); setPayAmount(Number(c.remaining)) }} className="text-xs py-1.5 px-3 rounded border border-neon-green/40 bg-neon-green/10 text-neon-green hover:bg-neon-green/20 inline-flex items-center gap-1"ry text-xs py-1.5 px-3 flex items-center gap-1"><DollarSign className="w-3 h-3" /> Record Payment</button>
                       )}
                       {c.status !== 'cancelled' && c.status !== 'cleared' && (
-                        <button onClick={() => cancelCredit(c)} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1"><Ban className="w-3 h-3" /> Cancel Credit</button>
+                        <button onClick={() => cancelCredit(c)} className="text-xs py-1.5 px-3 rounded border border-warning/40 bg-warning/10 text-warning hover:bg-warning/20 inline-flex items-center gap-1"center gap-1"><Ban className="w-3 h-3" /> Cancel Credit</button>
                       )}
-                      <button onClick={() => remove(c)} className="btn-ghost p-1.5 text-danger hover:bg-danger/10"><X className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => remove(c)} className="text-xs py-1.5 px-3 rounded border border-error/40 bg-error/10 text-error hover:bg-error/20 inline-flex items-center gap-1 ml-auto"><X className="w-3.5 h-3.5" /></button>
                     </div>
                   </div>
                 )}

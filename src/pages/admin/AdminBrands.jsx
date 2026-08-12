@@ -111,32 +111,31 @@ export function AdminBrands() {
         </div>
       )}
 
-      <div className="card overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-elev-bg">
-            <tr className="text-left text-xs uppercase tracking-wider text-muted-text">
-              <th className="px-4 py-3">Brand</th>
-              <th className="px-4 py-3">Slug</th>
-              <th className="px-4 py-3">Description</th>
-              <th className="px-4 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {brands.map((b) => (
-              <tr key={b.id} className="hover:bg-elev-bg/50">
-                <td className="px-4 py-3 font-medium text-main-text">{b.name}</td>
-                <td className="px-4 py-3 text-sec-text font-mono text-xs">{b.slug}</td>
-                <td className="px-4 py-3 text-sec-text text-xs max-w-md truncate">{b.description || '—'}</td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex justify-end gap-1">
-                    <button onClick={() => startEdit(b)} className="btn-secondary p-2"><Edit2 className="w-4 h-4" /></button>
-                    <button onClick={() => del(b)} className="btn-ghost p-2 text-danger hover:bg-danger/10"><Trash2 className="w-4 h-4" /></button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {brands.map((b) => (
+          <div key={b.id} className="card p-4 transition-all hover:-translate-y-0.5">
+            <div className="flex items-start gap-3 mb-3">
+              {b.logo_url ? (
+                <img src={b.logo_url} alt={b.name} className="w-12 h-12 rounded-lg object-contain bg-surfaceElevated p-1" />
+              ) : (
+                <div className="w-12 h-12 rounded-lg bg-surfaceElevated flex items-center justify-center text-2xl">🏷️</div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-main-text truncate">{b.name}</p>
+                <p className="text-[10px] text-muted-text font-mono truncate">{b.slug}</p>
+              </div>
+            </div>
+            {b.description && <p className="text-xs text-sec-text mb-3 line-clamp-2">{b.description}</p>}
+            <div className="flex gap-2 flex-wrap">
+              <button onClick={() => startEdit(b)} className="text-xs py-1.5 px-3 rounded border border-border bg-elev-bg text-sec-text hover:text-main-text inline-flex items-center gap-1">
+                <Edit2 className="w-3 h-3" /> Edit
+              </button>
+              <button onClick={() => del(b)} className="text-xs py-1.5 px-3 rounded border border-error/40 bg-error/10 text-error hover:bg-error/20 inline-flex items-center gap-1 ml-auto">
+                <Trash2 className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </AdminLayout>
   )
