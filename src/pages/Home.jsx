@@ -95,12 +95,12 @@ export function Home() {
               From the latest iPhone to budget-friendly smartphones — authentic products, official warranty, and fast delivery across Bangladesh.
             </p>
             <div className="flex flex-wrap gap-4">
-              <button className="btn-primary text-base px-8 py-3.5 animate-pulse-glow">
+              <a href="/brands" className="btn-primary text-base px-8 py-3.5 animate-pulse-glow flex items-center gap-2">
                 Shop Now <ArrowRight className="w-5 h-5" />
-              </button>
-              <button className="btn-secondary text-base px-8 py-3.5">
+              </a>
+              <a href="/compare" className="btn-secondary text-base px-8 py-3.5 inline-flex items-center justify-center">
                 Compare Phones
-              </button>
+              </a>
             </div>
             <div className="flex flex-wrap gap-6 mt-10">
               {[
