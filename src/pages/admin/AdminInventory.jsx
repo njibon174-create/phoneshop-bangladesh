@@ -5,7 +5,6 @@ import BarcodeScanner from '../../components/admin/BarcodeScanner'
 import { SellPhoneModal } from '../../components/admin/SellPhoneModal'
 import { supabase } from '../../lib/supabase'
 import { Plus, Edit2, Save, X, Package, Search, Camera, Trash2, ShoppingCart, LayoutGrid, List as ListIcon } from 'lucide-react'
-import BarcodeScanner from '../../components/admin/BarcodeScanner'
 
 function formatBDT(n) {
   return '\u09F3' + Number(n || 0).toLocaleString('en-IN')
