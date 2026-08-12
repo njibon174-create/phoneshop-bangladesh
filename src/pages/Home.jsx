@@ -122,7 +122,7 @@ export function Home() {
           <p className="text-center text-xs text-textSubtle font-medium uppercase tracking-widest mb-8">Trusted by All Major Brands</p>
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
             {brands.map((b) => (
-              <a key={b} href={`/brand/${(b.name || b).toLowerCase()}`} className="text-sm font-bold text-textMuted hover:text-text transition-colors">
+              <a key={b.slug || b.name || b} href={`/brand/${b.slug || (b.name || b).toLowerCase()}`} className="text-sm font-bold text-textMuted hover:text-text transition-colors">
                 {b.name || b}
               </a>
             ))}
