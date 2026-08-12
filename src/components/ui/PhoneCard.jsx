@@ -1,4 +1,4 @@
-import { Link, useNavigate, usePrefetch } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ShoppingCart, GitCompare, Heart, Check } from 'lucide-react'
 import { useState } from 'react'
 import { useCart } from '../../lib/cart'
@@ -7,7 +7,6 @@ import { add as compareAdd, has as compareHas } from '../../lib/compare'
 
 export function PhoneCard({ phone }) {
   const navigate = useNavigate()
-  const prefetch = usePrefetch ? usePrefetch() : null
   const { add } = useCart()
   const { has: inWishlist, toggle: toggleWish } = useWishlist()
   const [added, setAdded] = useState(false)
@@ -60,7 +59,6 @@ export function PhoneCard({ phone }) {
     <div
       className="card p-5 relative group cursor-pointer select-none"
       onClick={handleCardClick}
-      onMouseEnter={() => prefetch && prefetch('/product/' + slug)}
       role="article"
       aria-label={`View ${phone.name} details`}
     >
