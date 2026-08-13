@@ -51,7 +51,7 @@ export function useProductFilters() {
       setError(null)
       try {
         let query = supabase
-          .from('storefront_products')
+          .from('products_with_variants')
           .select('*', { count: 'exact' })
 
         // Brand filter
