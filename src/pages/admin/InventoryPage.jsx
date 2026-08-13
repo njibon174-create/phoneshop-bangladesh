@@ -507,11 +507,12 @@ export default function InventoryPage() {
 
       {/* ─── EDIT MODAL ─── */}
       {editPhone && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="card w-full max-w-md p-6 shadow-2xl">
+        <div className="fixed inset-0 z-40 flex items-start sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
+          <div className="card w-full max-w-lg p-6 shadow-2xl my-4 sm:my-8">
             <h2 className="text-base font-semibold text-[#E5E7EB] mb-4">Edit Phone</h2>
             <EditPhone
               phone={editPhone}
+              brands={brands}
               onSuccess={() => { setEditPhone(null); showToast('Phone updated successfully.'); fetchPhones() }}
               onCancel={() => setEditPhone(null)}
             />
