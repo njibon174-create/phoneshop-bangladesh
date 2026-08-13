@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { ChevronRight, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, Check, Cpu, Battery, Camera, HardDrive, Smartphone, CheckCircle2, Bell } from 'lucide-react'
-import { RestockRequestModal } from '../components/ui/RestockRequestModal'
 import { useCart } from '../lib/cart'
 import { useWishlist } from '../lib/wishlist'
 import { BackButton } from '../components/ui/BackButton'
@@ -96,18 +95,6 @@ function ProductError({ message }) {
       <h1 className="text-2xl font-bold text-main-text mb-2">Couldn't load product</h1>
       <p className="text-sec-text mb-6">{message}</p>
       <button onClick={() => navigate('/')} className="btn-primary">Back to Home</button>
-      {restockOpen && (
-        <RestockRequestModal
-          phone={{
-            id: product.id,
-            slug: product.slug,
-            name: product.name,
-            brand: product.brand_name,
-            variant: product.variant,
-          }}
-          onClose={() => setRestockOpen(false)}
-        />
-      )}
     </main>
   )
 }
@@ -124,6 +111,7 @@ export function ProductPage() {
   const [error, setError] = useState(null)
   const [activeImage, setActiveImage] = useState(0)
   const [copied, setCopied] = useState(false)
+  const [restockOpen, setRestockOpen] = useState(false)
 
   useEffect(() => {
     let cancelled = false
