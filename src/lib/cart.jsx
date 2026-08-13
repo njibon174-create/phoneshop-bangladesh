@@ -68,15 +68,17 @@ export function CartProvider({ children }) {
   }, [])
 
   const add = useCallback((product, qty = 1) => {
-    // Guard: do not add items without a slug — they can't be ordered.
-    if (!product || !product.slug) {
+    // Guard: do not add items without a variant_id or slug
+    if (!product || (!product.slug && !product.variant_id)) {
       if (typeof console !== 'undefined') {
-        console.warn('[cart] add() rejected — product has no slug', product)
+        console.warn('[cart] add() rejected — product has no slug or variant_id', product)
       }
       return false
     }
+    // Use variant_id as the unique cart key so different RAM/ROM combos are separate items
+    const cartKey = product.variant_id || product.slug
     setItems((prev) => {
-      const i = prev.findIndex((x) => x.slug === product.slug)
+      const i = prev.findIndex((x) => (x.variant_id || x.slug) === cartKey)
       if (i >= 0) {
         const next = [...prev]
         next[i] = { ...next[i], quantity: next[i].quantity + qty }
@@ -85,8 +87,9 @@ export function CartProvider({ children }) {
       return [
         ...prev,
         {
-          id: product.id || product.slug,
+          id: cartKey,
           slug: product.slug,
+          variant_id: product.variant_id || null,
           name: product.name,
           variant: product.variant,
           brand: product.brand,
@@ -99,16 +102,16 @@ export function CartProvider({ children }) {
     return true
   }, [])
 
-  const remove = useCallback((slug) => {
-    setItems((prev) => prev.filter((x) => x.slug !== slug))
+  const remove = useCallback((id) => {
+    setItems((prev) => prev.filter((x) => x.id !== id))
   }, [])
 
-  const setQuantity = useCallback((slug, qty) => {
+  const setQuantity = useCallback((id, qty) => {
     if (qty <= 0) {
-      setItems((prev) => prev.filter((x) => x.slug !== slug))
+      setItems((prev) => prev.filter((x) => x.id !== id))
       return
     }
-    setItems((prev) => prev.map((x) => (x.slug === slug ? { ...x, quantity: qty } : x)))
+    setItems((prev) => prev.map((x) => (x.id === id ? { ...x, quantity: qty } : x)))
   }, [])
 
   const clear = useCallback(() => setItems([]), [])

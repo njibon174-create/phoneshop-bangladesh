@@ -16,11 +16,11 @@ export async function fetchBrands() {
 
 /**
  * Fetch featured products for homepage.
- * Now uses the unified storefront_products view (aggregated from phones).
+ * Uses products_with_variants view (aggregated from product_variants + inventory_units).
  */
 export async function fetchFeaturedProducts(limit = 8) {
   const { data, error } = await supabase
-    .from('storefront_products')
+    .from('products_with_variants')
     .select('*')
     .or('is_featured.eq.true,is_bestseller.eq.true')
     .order('created_at', { ascending: false })
@@ -31,15 +31,16 @@ export async function fetchFeaturedProducts(limit = 8) {
 
 /**
  * Fetch all storefront products with optional brand filter.
+ * Uses products_with_variants view.
  */
 export async function fetchProducts({ brandSlug = null, limit = 100, offset = 0, inStockOnly = false } = {}) {
   let q = supabase
-    .from('storefront_products')
+    .from('products_with_variants')
     .select('*')
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1)
   if (brandSlug) q = q.eq('brand_slug', brandSlug)
-  if (inStockOnly) q = q.eq('in_stock', true)
+  if (inStockOnly) q = q.gt('total_stock_count', 0)
   const { data, error } = await q
   if (error) throw error
   return data || []
@@ -53,33 +54,33 @@ export async function fetchProductsByBrand(brandSlug, { limit = 50, offset = 0 }
 }
 
 /**
- * Fetch a single product by slug with all specs and inventory details.
+ * Fetch a single product by slug with all variants and specs.
+ * Also fetches per-variant stock for the selector.
  */
 export async function fetchProductBySlug(slug) {
   const { data: product, error } = await supabase
-    .from('storefront_products')
+    .from('products_with_variants')
     .select('*')
     .eq('slug', slug)
     .single()
   if (error) throw error
   if (!product) return null
 
-  // For storefront: get all in_stock units for "available" check
-  const { data: units } = await supabase
-    .from('phones')
-    .select('id, imei, status, mrp, buy_price')
-    .eq('brand', product.brand)
-    .eq('model', product.model)
-    .eq('variant', product.variant)
-    .order('created_at', { ascending: false })
+  // Fetch all active variants with stock info
+  const { data: variants } = await supabase
+    .from('variants_with_stock')
+    .select('*')
+    .eq('product_id', product.id)
+    .eq('is_active', true)
+    .order('mrp_bdt', { ascending: true })
 
   return {
     ...product,
-    units: units || [],
-    // Flatten specs into a 'full_specs' object for compatibility with existing UI
-    full_specs: product.specs || {},
-    images: product.image_url ? [{ id: '1', url: product.image_url, alt_text: product.name, position: 1, is_primary: true }] : [],
-    specs: Object.entries(product.specs || {}).map(([k, v], i) => ({ spec_key: k, display_value: String(v), sort_order: i })),
+    variants: variants || [],
+    // Flatten full_specs from JSONB
+    full_specs: product.full_specs || {},
+    // Fallback image
+    images: [],
   }
 }
 
@@ -88,10 +89,10 @@ export async function fetchProductBySlug(slug) {
  */
 export async function searchProducts(query, { limit = 30 } = {}) {
   const { data, error } = await supabase
-    .from('storefront_products')
+    .from('products_with_variants')
     .select('*')
     .or(
-      `name.ilike.%${query}%,model.ilike.%${query}%,variant.ilike.%${query}%,short_desc.ilike.%${query}%`
+      `name.ilike.%${query}%,short_desc.ilike.%${query}%`
     )
     .limit(limit)
   if (error) throw error
@@ -103,92 +104,76 @@ export async function searchProducts(query, { limit = 30 } = {}) {
  */
 export async function fetchDeals({ limit = 50 } = {}) {
   const { data, error } = await supabase
-    .from('storefront_products')
+    .from('products_with_variants')
     .select('*')
-    .gt('compare_at_price', 0)
+    .gt('min_price_bdt', 0)
     .order('created_at', { ascending: false })
     .limit(limit)
   if (error) throw error
-  return (data || []).filter((p) => p.compare_at_price > (p.price_bdt || 0))
+  return (data || []).filter((p) => (p.compare_price_bdt || 0) > (p.min_price_bdt || 0))
 }
 
 /**
  * Create an order from storefront. Each order item now references a specific
- * phone unit (cheapest in_stock unit) so we know exactly which IMEI was sold.
+ * product_variant so we know exactly which RAM/ROM/color combo was ordered.
  */
 export async function createOrder({ customer, items, deliveryMethod = 'home' }) {
   if (!items?.length) throw new Error('No items in order')
 
-  // Drop invalid items first (no slug = can't be ordered)
-  const validItems = items.filter((i) => i && i.slug)
+  // Drop invalid items first
+  const validItems = items.filter((i) => i && (i.variant_id || i.slug))
   if (validItems.length !== items.length) {
     throw new Error(`${items.length - validItems.length} item(s) in your cart are no longer available. Please clear your cart and re-add the items.`)
   }
 
-  // Fetch current prices from storefront_products view
-  // Be tolerant: if a cart item has a UUID slug (a phone id), try to find
-  // its parent product via the phones table.
-  const slugs = validItems.map((i) => i.slug).filter(Boolean)
-  const isUUID = (s) => typeof s === 'string' && /^[0-9a-f-]{36}$/i.test(s)
-  const uuidSlugs = items.filter((i) => isUUID(i.slug)).map((i) => i.slug)
-  const namedSlugs = items.filter((i) => !isUUID(i.slug)).map((i) => i.slug)
+  // Fetch current prices from variants_with_stock using variant_id
+  const variantIds = validItems.map((i) => i.variant_id).filter(Boolean)
+  const productSlugs = validItems.filter((i) => !i.variant_id).map((i) => i.slug)
 
-  const { data: products, error: prodError } = await supabase
-    .from('storefront_products')
-    .select('id, name, model, variant, price_bdt, brand, slug, stock_count, cheapest_unit_id')
-    .in('slug', [...new Set([...slugs, ...namedSlugs])])
-  if (prodError) throw prodError
+  let variantMap = new Map()
+  if (variantIds.length) {
+    const { data: variants, error: varErr } = await supabase
+      .from('variants_with_stock')
+      .select('id, product_id, variant_name, mrp_bdt, stock_count, product_name, ram_gb, rom_gb, color')
+      .in('id', [...new Set(variantIds)])
+    if (varErr) throw varErr
+    for (const v of variants || []) variantMap.set(v.id, v)
+  }
 
-  const priceMap = new Map(products.map((p) => [p.slug, p]))
-
-  // Fallback: if any cart item used a phone id, look up the phone → store product
-  if (uuidSlugs.length) {
-    const { data: phones } = await supabase
-      .from('phones')
-      .select('id, brand, model, variant, mrp, status')
-      .in('id', uuidSlugs)
-    if (phones) {
-      for (const ph of phones) {
-        const match = (products || []).find(p =>
-          p.brand === ph.brand && p.model === ph.model && p.variant === ph.variant
-        )
-        if (match) {
-          priceMap.set(ph.id, { ...match, _from_phone_id: ph.id })
-        }
-      }
-    }
+  // Also support slug lookup for legacy cart items
+  if (productSlugs.length) {
+    const { data: prods } = await supabase
+      .from('products_with_variants')
+      .select('id, slug, name')
+      .in('slug', [...new Set(productSlugs)])
+    for (const p of prods || []) variantMap.set(p.slug, { id: p.id, variant_name: p.name, mrp_bdt: 0, stock_count: 0 })
   }
 
   let subtotal = 0
   const orderItems = validItems.map((item) => {
-    const product = priceMap.get(item.slug)
-    if (!product) {
+    const variant = variantMap.get(item.variant_id || item.slug)
+    if (!variant) {
       const name = item.name || item.slug || 'unknown'
-      throw new Error(`"${name}" is not available in the storefront. Please remove it from your cart and re-add it from the homepage.`)
+      throw new Error(`"${name}" is not available. Please remove from cart and re-add.`)
     }
-    if (product.stock_count <= 0) throw new Error(`${product.name} is out of stock`)
-    if (item.quantity > product.stock_count) throw new Error(`Only ${product.stock_count} units of ${product.name} available`)
 
-    // Sanitize the unit price — fall back to the cart's stored price if the
-    // storefront view returned null/undefined, and coerce to Number to avoid NaN.
     const cartPrice = Number(item.unit_price_bdt != null ? item.unit_price_bdt : item.price_bdt)
-    const storePrice = Number(product.price_bdt)
+    const storePrice = Number(variant.mrp_bdt)
     const unitPrice = Number.isFinite(storePrice) && storePrice > 0 ? storePrice
                      : Number.isFinite(cartPrice) && cartPrice > 0 ? cartPrice
                      : 0
     if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
-      throw new Error(`Invalid price for "${product.name}". Please contact support.`)
+      throw new Error(`Invalid price for "${item.name}". Please contact support.`)
     }
+
+    if ((variant.stock_count || 0) <= 0) throw new Error(`${item.name} (${variant.variant_name}) is out of stock`)
+
     const lineTotal = unitPrice * item.quantity
     subtotal += lineTotal
     return {
-      // product_id is a soft-reference. The DB FK points to public.products.id
-      // but storefront data lives in public.phones — so we use the phone UUID.
-      // The order_items insert is wrapped in a try/catch below so a FK violation
-      // doesn't fail the entire order.
-      product_id: product.cheapest_unit_id || product.id,
-      product_name: product.name,
-      product_variant: product.variant,
+      variant_id: variant.id || item.variant_id,
+      product_name: item.name,
+      product_variant: variant.variant_name || item.variant || '',
       unit_price_bdt: unitPrice,
       quantity: item.quantity,
       line_total_bdt: lineTotal,
@@ -225,16 +210,11 @@ export async function createOrder({ customer, items, deliveryMethod = 'home' }) 
     .single()
   if (orderError) throw orderError
 
-  // Try to insert order_items. If product_id FK fails (because the phone
-  // id doesn't exist in public.products), log the error but still succeed —
-  // the order is what matters for the user, and we capture the order_number.
   const { error: itemsError } = await supabase
     .from('order_items')
     .insert(orderItems.map((i) => ({ ...i, order_id: order.id })))
   if (itemsError) {
-    // Surface in console for debugging, but don't fail the entire order
     console.warn('Order items insert failed:', itemsError.message)
-    // The order is still saved. The user gets the order number.
   }
 
   return { order, orderItems }

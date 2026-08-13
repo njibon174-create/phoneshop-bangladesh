@@ -30,15 +30,18 @@ export function useWishlist() {
     return () => window.removeEventListener('storage', onStorage)
   }, [])
 
-  const has = useCallback((slug) => items.some((x) => x.slug === slug), [items])
+  // Use variant_id || slug as unique key so different RAM/ROM combos are separate
+  const has = useCallback((id) => items.some((x) => (x.variant_id || x.slug) === id), [items])
 
   const toggle = useCallback((product) => {
+    const key = product.variant_id || product.slug
     setItems((prev) => {
-      if (prev.some((x) => x.slug === product.slug)) {
-        return prev.filter((x) => x.slug !== product.slug)
+      if (prev.some((x) => (x.variant_id || x.slug) === key)) {
+        return prev.filter((x) => (x.variant_id || x.slug) !== key)
       }
       return [...prev, {
         slug: product.slug,
+        variant_id: product.variant_id || null,
         name: product.name,
         variant: product.variant,
         brand: product.brand,
@@ -49,8 +52,8 @@ export function useWishlist() {
     })
   }, [])
 
-  const remove = useCallback((slug) => {
-    setItems((prev) => prev.filter((x) => x.slug !== slug))
+  const remove = useCallback((id) => {
+    setItems((prev) => prev.filter((x) => (x.variant_id || x.slug) !== id))
   }, [])
 
   const clear = useCallback(() => setItems([]), [])
