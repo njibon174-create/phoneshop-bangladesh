@@ -216,7 +216,7 @@ export function PhoneShopAdmin() {
             )}
           </div>
 
-          {activeTab === 'inventory' && <InventoryPage />}
+          {activeTab === 'inventory' && <InventoryPage setAddOpen={setAddOpen} />}
           {activeTab === 'sales' && <SalesPage />}
           {activeTab === 'baki' && <BakiLedgerPage />}
           {activeTab === 'cashbook' && <CashBookPage />}
