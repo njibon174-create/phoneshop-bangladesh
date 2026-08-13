@@ -1,8 +1,6 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import BarcodeScanner from '../../components/admin/BarcodeScanner'
-
-const BRANDS = ['Samsung', 'Xiaomi', 'Realme', 'Vivo', 'Oppo', 'iTel', 'Symphony', 'Walton', 'Apple', 'Other']
 
 function validateIMEI(imei) {
   if (!imei) return false
@@ -12,6 +10,7 @@ function validateIMEI(imei) {
 
 export default function AddPhone({ onSuccess, onCancel }) {
   const [brand, setBrand] = useState('')
+  const [brands, setBrands] = useState([])
   const [customBrand, setCustomBrand] = useState('')
   const [model, setModel] = useState('')
   const [variant, setVariant] = useState('Standard')
@@ -50,6 +49,12 @@ export default function AddPhone({ onSuccess, onCancel }) {
   const [msg, setMsg] = useState(null)
   const [showScanner, setShowScanner] = useState(false)
   const imeiRefs = useRef([])
+
+  useEffect(() => {
+    supabase.from('brands').select('name').order('name').then(({ data }) => {
+      if (data) setBrands(data.map(b => b.name))
+    })
+  }, [])
 
   function validate() {
     const errs = {}
@@ -198,7 +203,8 @@ export default function AddPhone({ onSuccess, onCancel }) {
             onChange={e => { setBrand(e.target.value); setErrors(p => ({ ...p, brand: '' })) }}
           >
             <option value="">Select brand</option>
-            {BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
+            {brands.map(b => <option key={b} value={b}>{b}</option>)}
+            <option value="Other">Other (custom)</option>
           </select>
           {errors.brand && <p className="mt-1 text-xs text-red-500">{errors.brand}</p>}
           {brand === 'Other' && (

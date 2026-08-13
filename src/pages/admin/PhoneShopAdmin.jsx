@@ -230,8 +230,8 @@ export function PhoneShopAdmin() {
 
       {/* Add Phone modal — opens from the Inventory page header */}
       {addOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
-          <div className="card w-full max-w-lg p-6 shadow-2xl bg-elev-bg my-8">
+        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
+          <div className="card w-full max-w-lg p-6 shadow-2xl bg-elev-bg my-4 sm:my-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-semibold" style={{ color: '#E5E7EB' }}>Add Phone to Inventory</h2>
               <button onClick={() => setAddOpen(false)} className="btn-ghost btn-sm">
