@@ -47,6 +47,46 @@ export function OrdersPage() {
     load()
   }
 
+  async function deleteOrder(id) {
+    if (!confirm('Delete this order permanently? This cannot be undone.')) return
+    try {
+      // Try direct delete first (works if anon has DELETE permission)
+      const { error: directErr } = await supabase.from('orders').delete().eq('id', id)
+      if (!directErr) {
+        load()
+        return
+      }
+      // Fallback to RPC function (admin_delete_orders)
+      const { error: rpcErr } = await supabase.rpc('admin_delete_orders', { pattern: null })
+      if (rpcErr) {
+        alert('Delete failed. Run supabase/005_cleanup_and_grant.sql in Supabase SQL Editor to grant permission.')
+        return
+      }
+      load()
+    } catch (e) {
+      alert('Error: ' + e.message)
+    }
+  }
+
+  async function clearAllTestOrders() {
+    if (!confirm('Delete ALL test/demo orders (BD-TEST-*, BD-REAL-*, BD-20260812-*, BD-TEMP-*)? This cannot be undone.')) return
+    try {
+      const { data, error } = await supabase.rpc('admin_delete_orders', { pattern: 'BD-TEST-%|BD-REAL-%|BD-20260812-%|BD-TEMP-%' })
+      if (error) {
+        // Fallback: try with a single pattern at a time
+        const { error: e2 } = await supabase.rpc('admin_delete_orders', { pattern: 'BD-TEST-%' })
+        if (e2) {
+          alert('Could not delete. Run supabase/005_cleanup_and_grant.sql in Supabase SQL Editor first.')
+          return
+        }
+      }
+      alert(`Deleted ${data ?? 0} test orders`)
+      load()
+    } catch (e) {
+      alert('Error: ' + e.message)
+    }
+  }
+
   const filtered = orders.filter(o => {
     const matchSearch = !search || `${o.order_number} ${o.customer_name} ${o.customer_phone}`.toLowerCase().includes(search.toLowerCase())
     const matchStatus = statusFilter === 'all' || o.order_status === statusFilter
@@ -70,6 +110,14 @@ export function OrdersPage() {
           <option value="all">All Status</option>
           {STATUSES.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
         </select>
+        <button
+          onClick={clearAllTestOrders}
+          className="btn-secondary text-sm py-2 px-3 inline-flex items-center gap-1"
+          style={{ backgroundColor: 'rgba(248,113,113,0.12)', color: '#F87171', border: '1px solid rgba(248,113,113,0.3)' }}
+          title="Delete all BD-TEST-*, BD-REAL-*, BD-20260812-*, BD-TEMP-* orders"
+        >
+          🧹 Clear Test Orders
+        </button>
       </div>
 
       {!loading && <p className="text-xs text-[#9CA3AF]">Showing {filtered.length} order{filtered.length !== 1 ? 's' : ''}</p>}
