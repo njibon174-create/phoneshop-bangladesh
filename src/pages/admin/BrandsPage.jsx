@@ -64,15 +64,24 @@ export function BrandsPage() {
     let err
     if (creating) ({ error: err } = await supabase.from('brands').insert(payload))
     else ({ error: err } = await supabase.from('brands').update(payload).eq('id', editing))
-    if (err) return showToast(err.message, 'error')
+    if (err) {
+      if (/permission denied/i.test(err.message || '')) {
+        return showToast('Permission denied. Run supabase/006_grant_admin_permissions.sql in Supabase SQL Editor.', 'error')
+      }
+      return showToast(err.message, 'error')
+    }
     cancel(); load(); showToast('Saved!')
   }
 
   async function del(b) {
     if (!confirm(`Delete brand "${b.name}"?`)) return
     const { error } = await supabase.from('brands').delete().eq('id', b.id)
-    if (error) showToast(error.message, 'error')
-    else load()
+    if (error) {
+      if (/permission denied/i.test(error.message || '')) {
+        return showToast('Permission denied. Run supabase/006_grant_admin_permissions.sql in Supabase SQL Editor.', 'error')
+      }
+      showToast(error.message, 'error')
+    } else load()
   }
 
   const filtered = brands.filter(b => !search || b.name.toLowerCase().includes(search.toLowerCase()) || (b.slug || '').toLowerCase().includes(search.toLowerCase()))
