@@ -71,18 +71,6 @@ function ProductSkeleton() {
           </div>
         </div>
       </div>
-      {restockOpen && (
-        <RestockRequestModal
-          phone={{
-            id: product.id,
-            slug: product.slug,
-            name: product.name,
-            brand: product.brand_name,
-            variant: product.variant,
-          }}
-          onClose={() => setRestockOpen(false)}
-        />
-      )}
     </main>
   )
 }
