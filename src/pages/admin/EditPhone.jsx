@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 
 export default function EditPhone({ phone, brands = [], onSuccess, onCancel }) {
@@ -6,9 +6,6 @@ export default function EditPhone({ phone, brands = [], onSuccess, onCancel }) {
   const [customBrand, setCustomBrand] = useState('')
   const [model, setModel] = useState(phone.model || '')
   const [variant, setVariant] = useState(phone.variant || 'Standard')
-  const [shortDesc, setShortDesc] = useState(phone.short_desc || '')
-  const [longDesc, setLongDesc] = useState(phone.long_desc || '')
-  const [colors, setColors] = useState(phone.colors || '')
   const [specs, setSpecs] = useState({
     display: phone.specs?.display || '',
     chip: phone.specs?.chip || '',
@@ -29,7 +26,7 @@ export default function EditPhone({ phone, brands = [], onSuccess, onCancel }) {
   const [mrp, setMrp] = useState(phone.mrp || '')
   const [compareAtPrice, setCompareAtPrice] = useState(phone.compare_at_price || '')
   const [warranty, setWarranty] = useState(String(phone.warranty_months || '12'))
-  const [imageUrl, setImageUrl] = useState(phone.primary_image_url || '')
+  const [imageUrl, setImageUrl] = useState(phone.image_url || '')
   const [isFeatured, setIsFeatured] = useState(phone.is_featured || false)
   const [isBestseller, setIsBestseller] = useState(phone.is_bestseller || false)
   const [status, setStatus] = useState(phone.status || 'in_stock')
@@ -44,7 +41,7 @@ export default function EditPhone({ phone, brands = [], onSuccess, onCancel }) {
 
   function validate() {
     const errs = {}
-    const finalBrand = brand === 'Other' || isOtherBrand ? customBrand.trim() : brand
+    const finalBrand = isOtherBrand ? customBrand.trim() : brand
     if (!finalBrand) errs.brand = 'Brand is required'
     if (!model.trim()) errs.model = 'Model is required'
     if (!buyPrice || Number(buyPrice) <= 0) errs.buyPrice = 'Valid buy price is required'
@@ -60,34 +57,22 @@ export default function EditPhone({ phone, brands = [], onSuccess, onCancel }) {
 
     const finalBrand = isOtherBrand ? customBrand.trim() : brand
 
+    // Build specs object — remove empty string values
+    const cleanSpecs = {}
+    for (const [k, v] of Object.entries(specs)) {
+      if (v !== '') cleanSpecs[k] = v
+    }
+
     const payload = {
       brand: finalBrand,
       model: model.trim(),
       variant: variant.trim() || 'Standard',
-      short_desc: shortDesc.trim() || null,
-      long_desc: longDesc.trim() || null,
-      colors: colors.trim() || null,
-      specs: {
-        display: specs.display || null,
-        chip: specs.chip || null,
-        os: specs.os || null,
-        ram_gb: specs.ram_gb || null,
-        storage_gb: specs.storage_gb || null,
-        rear_camera: specs.rear_camera || null,
-        front_camera: specs.front_camera || null,
-        battery_mah: specs.battery_mah || null,
-        charging_w: specs.charging_w || null,
-        wireless_charging_w: specs.wireless_charging_w || null,
-        refresh_rate_hz: specs.refresh_rate_hz || null,
-        weight_g: specs.weight_g || null,
-        ip_rating: specs.ip_rating || null,
-        '5g': specs['5g'] || null,
-      },
+      specs: Object.keys(cleanSpecs).length > 0 ? cleanSpecs : null,
       buy_price: Number(buyPrice),
       mrp: Number(mrp),
       compare_at_price: compareAtPrice ? Number(compareAtPrice) : null,
       warranty_months: Number(warranty) || 12,
-      primary_image_url: imageUrl.trim() || null,
+      image_url: imageUrl.trim() || null,
       is_featured: isFeatured,
       is_bestseller: isBestseller,
       status,
@@ -178,20 +163,6 @@ export default function EditPhone({ phone, brands = [], onSuccess, onCancel }) {
         </div>
       </div>
 
-      {/* Short Description */}
-      <div>
-        <label className={labelClass}>Short Description</label>
-        <input type="text" className={inputClass} value={shortDesc} placeholder="e.g. Apple flagship with A17 Pro chip"
-          onChange={e => setShortDesc(e.target.value)} />
-      </div>
-
-      {/* Colors */}
-      <div>
-        <label className={labelClass}>Colors</label>
-        <input type="text" className={inputClass} value={colors} placeholder="e.g. Black, Blue, Silver"
-          onChange={e => setColors(e.target.value)} />
-      </div>
-
       {/* Prices */}
       <div className="grid grid-cols-3 gap-3">
         <div>
@@ -254,14 +225,6 @@ export default function EditPhone({ phone, brands = [], onSuccess, onCancel }) {
             onChange={e => setIsBestseller(e.target.checked)} />
           <span className="text-xs text-[#9CA3AF]">Bestseller</span>
         </label>
-      </div>
-
-      {/* Long Description */}
-      <div>
-        <label className={labelClass}>Long Description</label>
-        <textarea className={`${inputClass} min-h-[80px] resize-y`} value={longDesc}
-          placeholder="Full product page description..."
-          onChange={e => setLongDesc(e.target.value)} />
       </div>
 
       {/* Specifications */}
