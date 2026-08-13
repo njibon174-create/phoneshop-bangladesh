@@ -74,7 +74,7 @@ export function DealsPage() {
                 brand: p.brand_name,
                 name: p.name,
                 variant: p.variant,
-                price: formatPrice(p.price_bdt),
+                price: formatPrice(p.price_bdt ?? p.min_price_bdt),
                 comparePrice: p.compare_price_bdt ? formatPrice(p.compare_price_bdt) : null,
                 image: p.primary_image_url,
                 slug: p.slug, inStock: p.in_stock,

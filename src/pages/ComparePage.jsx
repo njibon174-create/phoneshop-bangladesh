@@ -216,8 +216,8 @@ export function ComparePage() {
                     <span className="text-[10px] uppercase tracking-wider text-neon-green font-bold">{p.brand_name}</span>
                     <h3 className="font-semibold text-main-text text-sm line-clamp-2 leading-tight">{p.name}</h3>
                     <p className="text-xs text-sec-text line-clamp-1">{p.variant}</p>
-                    <p className="font-bold text-main-text mt-2 text-lg">{formatPrice(p.price_bdt)}</p>
-                    {p.compare_price_bdt && p.compare_price_bdt > p.price_bdt && (
+                    <p className="font-bold text-main-text mt-2 text-lg">{formatPrice(p.price_bdt ?? p.min_price_bdt)}</p>
+                    {p.compare_price_bdt && p.compare_price_bdt > (p.price_bdt ?? p.min_price_bdt) && (
                       <p className="text-xs text-textSubtle line-through">{formatPrice(p.compare_price_bdt)}</p>
                     )}
                     <Link to={`/product/${p.slug}`} className="btn-primary w-full text-xs py-1.5 text-center mt-3">View product</Link>
