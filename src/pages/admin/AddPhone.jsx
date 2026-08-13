@@ -14,10 +14,6 @@ export default function AddPhone({ onSuccess, onCancel }) {
   const [customBrand, setCustomBrand] = useState('')
   const [model, setModel] = useState('')
   const [variant, setVariant] = useState('Standard')
-  // Phone details — show in front shop product page
-  const [shortDesc, setShortDesc] = useState('')
-  const [longDesc, setLongDesc] = useState('')
-  const [colors, setColors] = useState('')
   const [specs, setSpecs] = useState({
     display: '',
     chip: '',
@@ -35,7 +31,6 @@ export default function AddPhone({ onSuccess, onCancel }) {
     '5g': '',
   })
   const [compareAtPrice, setCompareAtPrice] = useState('')
-  const [condition, setCondition] = useState('new') // 'new' | 'refurbished'
   // MULTI-IMEI: one row per unit, plus bulk paste & scan
   const [imeiList, setImeiList] = useState([''])
   const [buyPrice, setBuyPrice] = useState('')
@@ -89,15 +84,12 @@ export default function AddPhone({ onSuccess, onCancel }) {
     // Build rows — one per IMEI; or one model-only row if none entered.
     // Adding to inventory automatically makes the phone visible in the front shop.
     const validImeis = imeiList.map(i => i.trim()).filter(Boolean)
-    // Build the specs object — only use fields the user filled in
+    // Build specs object — only use fields the user filled in
     const cleanSpecs = {}
     for (const [k, v] of Object.entries(specs)) {
       const trimmed = (v || '').toString().trim()
       if (trimmed) cleanSpecs[k] = trimmed
     }
-    if (colors.trim()) cleanSpecs.colors = colors.trim()
-    if (shortDesc.trim()) cleanSpecs.short_desc = shortDesc.trim()
-    if (longDesc.trim()) cleanSpecs.long_desc = longDesc.trim()
 
     const baseRow = {
       brand: finalBrand,
@@ -110,10 +102,7 @@ export default function AddPhone({ onSuccess, onCancel }) {
       image_url: imageUrl.trim() || null,
       is_featured: isFeatured,
       is_bestseller: isBestseller,
-      short_desc: shortDesc.trim() || null,
-      long_desc: longDesc.trim() || null,
       specs: Object.keys(cleanSpecs).length ? cleanSpecs : {},
-      condition: condition,
       status: 'in_stock',
     }
     const rows = validImeis.length > 0
@@ -308,22 +297,6 @@ export default function AddPhone({ onSuccess, onCancel }) {
         <div className="flex items-center justify-between">
           <p className="text-xs font-semibold uppercase tracking-wider text-main-text">📋 Phone Details</p>
           <p className="text-[10px] text-muted-text">These appear in the front shop product page</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
-            <label className="label">Short Description</label>
-            <input type="text" className="input" placeholder="e.g. Apple flagship with A17 Pro chip" value={shortDesc} onChange={e => setShortDesc(e.target.value)} />
-          </div>
-          <div>
-            <label className="label">Colors (optional)</label>
-            <input type="text" className="input" placeholder="e.g. Black, Blue, Silver" value={colors} onChange={e => setColors(e.target.value)} />
-          </div>
-        </div>
-
-        <div>
-          <label className="label">Long Description</label>
-          <textarea className="input min-h-[80px] resize-y" placeholder="Detailed description shown on the product page" value={longDesc} onChange={e => setLongDesc(e.target.value)} />
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
