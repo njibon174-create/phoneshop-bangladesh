@@ -513,7 +513,11 @@ export default function InventoryPage() {
             <EditPhone
               phone={editPhone}
               brands={brands}
-              onSuccess={() => { setEditPhone(null); showToast('Phone updated successfully.'); fetchPhones() }}
+              onSuccess={({ updatedCount }) => {
+                setEditPhone(null)
+                showToast(`Updated ${updatedCount} phone${updatedCount !== 1 ? 's' : ''} successfully.`)
+                fetchPhones()
+              }}
               onCancel={() => setEditPhone(null)}
             />
           </div>

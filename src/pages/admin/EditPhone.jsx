@@ -29,7 +29,7 @@ export default function EditPhone({ phone, brands = [], onSuccess, onCancel }) {
   const [imageUrl, setImageUrl] = useState(phone.image_url || '')
   const [isFeatured, setIsFeatured] = useState(phone.is_featured || false)
   const [isBestseller, setIsBestseller] = useState(phone.is_bestseller || false)
-  const [status, setStatus] = useState(phone.status || 'in_stock')
+  const [updateAll, setUpdateAll] = useState(true) // default: update all same model
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
 
@@ -79,10 +79,30 @@ export default function EditPhone({ phone, brands = [], onSuccess, onCancel }) {
     }
 
     setLoading(true)
-    const { error } = await supabase
-      .from('phones')
-      .update(payload)
-      .eq('id', phone.id)
+
+    let updatedCount = 0
+    let error = null
+
+    if (updateAll) {
+      // Update ALL phones with same brand+model (ignores status — same model across all statuses)
+      const { count, error: err1 } = await supabase
+        .from('phones')
+        .update(payload)
+        .eq('brand', phone.brand)
+        .eq('model', phone.model)
+
+      updatedCount = count ?? 0
+      error = err1
+    } else {
+      // Update only this specific phone (by ID)
+      const { error: err2 } = await supabase
+        .from('phones')
+        .update(payload)
+        .eq('id', phone.id)
+      updatedCount = 1
+      error = err2
+    }
+
     setLoading(false)
 
     if (error) {
@@ -90,7 +110,10 @@ export default function EditPhone({ phone, brands = [], onSuccess, onCancel }) {
       return
     }
 
-    onSuccess()
+    // Show brief success then close
+    if (onSuccess) {
+      onSuccess({ updatedCount, updateAll })
+    }
   }
 
   const specFields = [
@@ -128,6 +151,22 @@ export default function EditPhone({ phone, brands = [], onSuccess, onCancel }) {
         <input type="text" className={`${inputClass} opacity-60 cursor-not-allowed`} value={phone.imei || ''} readOnly />
       </div>
 
+      {/* Scope indicator */}
+      <div className="px-3 py-2 rounded-lg bg-[#1a2744] border border-[#1E3A5F] text-xs text-[#9CA3AF]">
+        <strong className="text-[#E5E7EB]">{phone.brand} {phone.model}</strong> — editing applies to this phone only (IMEI-level).
+        Toggle below to update <strong className="text-[#E5E7EB]">all phones with the same model</strong>.
+      </div>
+
+      {/* Update scope toggle */}
+      <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-[#1E3A5F] bg-[#0D1B2A]">
+        <input type="checkbox" id="updateAll" className="accent-[#00D4FF] w-4 h-4" checked={updateAll}
+          onChange={e => setUpdateAll(e.target.checked)} />
+        <label htmlFor="updateAll" className="text-xs text-[#E5E7EB] cursor-pointer select-none">
+          <strong>Update all phones with the same brand + model</strong>
+          <span className="text-[#9CA3AF] block">All variants (all IMEIs) of "{phone.model}" will be updated.</span>
+        </label>
+      </div>
+
       {/* Brand */}
       <div>
         <label className={labelClass}>Brand</label>
@@ -158,7 +197,7 @@ export default function EditPhone({ phone, brands = [], onSuccess, onCancel }) {
         </div>
         <div>
           <label className={labelClass}>Variant</label>
-          <input type="text" className={inputClass} value={variant} placeholder="e.g. Standard"
+          <input type="text" className={inputClass} value={variant} placeholder="e.g. 256GB Black"
             onChange={e => setVariant(e.target.value)} />
         </div>
       </div>
@@ -184,21 +223,11 @@ export default function EditPhone({ phone, brands = [], onSuccess, onCancel }) {
         </div>
       </div>
 
-      {/* Warranty + Status */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className={labelClass}>Warranty (months)</label>
-          <input type="number" className={inputClass} value={warranty} min="0"
-            onChange={e => setWarranty(e.target.value)} />
-        </div>
-        <div>
-          <label className={labelClass}>Status</label>
-          <select className={inputClass} value={status} onChange={e => setStatus(e.target.value)}>
-            <option value="in_stock">In Stock</option>
-            <option value="sold">Sold</option>
-            <option value="returned">Returned</option>
-          </select>
-        </div>
+      {/* Warranty */}
+      <div>
+        <label className={labelClass}>Warranty (months)</label>
+        <input type="number" className={inputClass} value={warranty} min="0"
+          onChange={e => setWarranty(e.target.value)} />
       </div>
 
       {/* Image URL */}
