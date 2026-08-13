@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PhoneCard } from '../components/ui/PhoneCard'
-import { fetchBrands, fetchFeaturedProducts } from '../lib/queries'
+import { fetchBrands, fetchProducts } from '../lib/queries'
 import { Sparkles, Zap, Shield, Truck, BadgeCheck, ChevronRight, ArrowRight, MessageCircle, Phone, MapPin } from 'lucide-react'
 
 function formatPrice(bdt) {
@@ -20,7 +20,7 @@ export function Home() {
       try {
         const [brandsData, phonesData] = await Promise.all([
           fetchBrands().catch(() => []),
-          fetchFeaturedProducts(8).catch(() => []),
+          fetchProducts({ limit: 8 }).catch(() => []),
         ])
         if (cancelled) return
         if (brandsData?.length) setBrands(brandsData)
@@ -212,7 +212,7 @@ export function Home() {
               {brands.map(b => (
                 <Link
                   key={b.slug || b.name}
-                  to={`/brand/${b.slug || (b.name || b).toLowerCase()}`}
+                  to={`/brand/${b.slug || b.name.toLowerCase().replace(/ /g, '-')}`}
                   className="group flex flex-col items-center justify-center p-4 rounded-2xl transition-all hover:-translate-y-1"
                   style={{
                     backgroundColor: '#111827',

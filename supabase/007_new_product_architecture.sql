@@ -12,6 +12,24 @@
 -- ============================================================
 
 -- ============================================================
+-- STEP 0 (PRE-MIGRATION): Insert any missing brands from phones table
+-- ============================================================
+-- Some phone brands might not exist in brands table — insert them first
+insert into public.brands (name, slug, is_active)
+select distinct
+  trim(phones.brand) as name,
+  lower(replace(replace(trim(phones.brand), ' ', '-'), '&', '')) as slug,
+  true as is_active
+from public.phones
+where phones.brand is not null and phones.brand != ''
+and not exists (
+  select 1 from public.brands b
+  where lower(b.name) = lower(trim(phones.brand))
+    or b.slug = lower(replace(replace(trim(phones.brand), ' ', '-'), '&', ''))
+)
+on conflict (slug) do nothing;
+
+-- ============================================================
 -- STEP 1: Create new tables
 -- ============================================================
 
@@ -89,8 +107,8 @@ create index inventory_units_imei_idx     on public.inventory_units (imei);
 insert into public.products (brand_id, slug, name, variant, price_bdt, is_active, created_at)
 select
   coalesce(
-    (select id from public.brands where lower(name) = lower(phones.brand) limit 1),
-    (select id from public.brands where name = 'Other' limit 1)
+    (select id from public.brands where lower(trim(name)) = lower(trim(phones.brand)) limit 1),
+    (select id from public.brands where lower(trim(name)) = 'other' limit 1)
   ) as brand_id,
   lower(replace(replace(replace(
     trim(concat(phones.brand, '-', phones.model, '-', phones.variant)),
@@ -101,31 +119,28 @@ select
   true as is_active,
   min(phones.created_at) as created_at
 from public.phones
-where phones.mrp is not null and phones.mrp > 0
+where phones.mrp is not null and phones.mrp > 0 and phones.brand is not null and phones.brand != ''
 group by phones.brand, phones.model, phones.variant, phones.mrp
 on conflict (slug) do nothing;
 
--- 4c. Create one product_variant per unique (brand+model+variant+mrp) combo
--- This groups phones by their spec combo
+-- 4b. Create one product_variant per unique (brand+model+variant+mrp) combo
 insert into public.product_variants (product_id, variant_name, mrp_bdt, buy_price_bdt, is_default, created_at, updated_at)
 select
   p.id as product_id,
-  coalesce(pv.variant_name, p.variant, p.name) as variant_name,
-  coalesce(pv.mrp, p.price_bdt) as mrp_bdt,
-  coalesce(pv.buy_price_bdt, p.cost_bdt) as buy_price_bdt,
+  coalesce(p.variant, p.name) as variant_name,
+  min(coalesce(p.price_bdt, phones.mrp)) as mrp_bdt,
+  min(coalesce(phones.cost_price, phones.buy_price)) as buy_price_bdt,
   true as is_default,
   min(phones.created_at) as created_at,
   now() as updated_at
 from public.phones
 join public.products p on lower(p.name) = lower(phones.model)
-  and p.variant = phones.variant
-left join public.product_variants pv on pv.product_id = p.id
+  and (p.variant = phones.variant or (p.variant is null and phones.variant is null))
 where phones.mrp is not null
-group by p.id, pv.variant_name, pv.mrp, p.price_bdt, p.cost_bdt, p.variant, p.name
+group by p.id, p.variant, p.name, p.price_bdt
 on conflict do nothing;
 
--- 4d. Create inventory_units for each phone (one per IMEI row)
--- Link each phone to a product_variant by matching product_id + variant_name
+-- 4c. Create inventory_units for each phone (one per IMEI row)
 insert into public.inventory_units (variant_id, imei, buy_price_bdt, mrp_bdt, status, condition, created_at, updated_at)
 select
   pv.id as variant_id,
@@ -138,9 +153,9 @@ select
   phones.updated_at
 from public.phones
 join public.products p on lower(p.name) = lower(phones.model)
-  and (p.variant = phones.variant or p.variant is null)
+  and (p.variant = phones.variant or (p.variant is null and phones.variant is null))
 join lateral (
-  select pv2.id, pv2.variant_name
+  select pv2.id
   from public.product_variants pv2
   where pv2.product_id = p.id
   order by pv2.is_default desc
