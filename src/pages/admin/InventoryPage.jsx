@@ -4,8 +4,6 @@ import EditPhone from './EditPhone'
 import SellPhone from './SellPhone'
 import BarcodeScanner from '../../components/admin/BarcodeScanner'
 
-const BRANDS = ['Samsung', 'Xiaomi', 'Realme', 'Vivo', 'Oppo', 'iTel', 'Symphony', 'Walton', 'Apple', 'Other']
-
 const STATUS_CONFIG = {
   in_stock: {
     label: 'In Stock',
@@ -78,6 +76,7 @@ export default function InventoryPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('in_stock')
   const [brandFilter, setBrandFilter] = useState('all')
+  const [brands, setBrands] = useState([])
   const [editPhone, setEditPhone] = useState(null)
   const [sellPhone, setSellPhone] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
@@ -102,6 +101,12 @@ export default function InventoryPage() {
   }
 
   useEffect(() => { fetchPhones() }, [])
+
+  useEffect(() => {
+    supabase.from('brands').select('name').order('name').then(({ data }) => {
+      if (data) setBrands(data.map(b => b.name))
+    })
+  }, [])
 
   async function handleDelete(phone) {
     setDeleting(true)
@@ -236,7 +241,7 @@ export default function InventoryPage() {
 
         <select className="input w-auto" value={brandFilter} onChange={e => setBrandFilter(e.target.value)}>
           <option value="all">All Brands</option>
-          {BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
+          {brands.map(b => <option key={b} value={b}>{b}</option>)}
         </select>
 
         {/* View Toggle */}
