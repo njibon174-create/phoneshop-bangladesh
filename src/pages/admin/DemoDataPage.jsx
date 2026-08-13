@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Database, AlertTriangle, CheckCircle2, Trash2, Sparkles, ShieldAlert } from 'lucide-react'
+import { Database, AlertTriangle, CheckCircle2, Trash2, Sparkles, ShieldAlert, XCircle, Check } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
 export function DemoDataPage() {
@@ -15,16 +15,34 @@ export function DemoDataPage() {
   async function clearAll() {
     setLoading(true)
     try {
-      // Delete in order to respect FKs
-      await supabase.from('order_items').delete().gte('id', '00000000-0000-0000-0000-000000000000')
-      await supabase.from('orders').delete().gte('id', '00000000-0000-0000-0000-000000000000')
-      await supabase.from('credit_payments').delete().gte('amount', 0)
-      await supabase.from('credits').delete().gte('total_due', 0)
-      await supabase.from('cash_transaction_edits').delete().gte('id', 0)
-      await supabase.from('cash_transactions').delete().gte('amount', 0)
-      await supabase.from('sales').delete().gte('sell_price', 0)
-      await supabase.from('phones').delete().gte('created_at', '1900-01-01')
-      showToast('All demo data cleared. Run the SQL to re-seed.', 'success')
+      // Delete in order to respect FKs (anon can DELETE on most tables now)
+      const deleteOrder = [
+        'order_items',
+        'orders',
+        'credit_payments',
+        'credits',
+        'cash_transaction_edits',
+        'cash_transactions',
+        'sales',
+        'phones',
+      ]
+      const results = []
+      for (const table of deleteOrder) {
+        try {
+          // Use the safest delete: any record with id >= 00000000-... (all UUIDs)
+          await supabase.from(table).delete().gte('id', '00000000-0000-0000-0000-000000000000')
+          results.push({ table, ok: true })
+        } catch (e) {
+          // Try alternate keys (some tables use non-id fields)
+          try {
+            await supabase.from(table).delete().gte('created_at', '1900-01-01')
+            results.push({ table, ok: true })
+          } catch (e2) {
+            results.push({ table, ok: false, err: e2.message })
+          }
+        }
+      }
+      showToast(`Cleared ${results.filter(r => r.ok).length}/${results.length} tables. Run SQL to re-seed.`, 'success')
     } catch (e) {
       showToast('Error: ' + e.message, 'error')
     }
@@ -48,9 +66,9 @@ export function DemoDataPage() {
           <div className="flex-1">
             <h3 className="font-semibold text-[#E5E7EB] mb-1">Demo Data Management</h3>
             <p className="text-sm text-[#7EB8DA] leading-relaxed">
-              The site has <strong>30+ real phone models</strong> from gadgetandgear.com pre-seeded
-              with 3 months of sales history, baki ledger, and cash book entries. Use this page to
-              reset the demo data.
+              The site comes pre-seeded with <strong>30+ real phone models</strong> from
+              gadgetandgear.com — plus 3 months of sales history, baki ledger, and cash book
+              entries. Use this page to reset the demo data.
             </p>
           </div>
         </div>
@@ -81,9 +99,7 @@ export function DemoDataPage() {
             <p className="text-sm font-semibold text-[#E5E7EB]">Clear All Demo Data</p>
             <p className="text-xs mt-1 text-[#7EB8DA]">
               This will delete ALL phones, sales, credits, cash transactions, and online orders.
-              The brands table stays. After clearing, run the SQL migration file
-              <code className="bg-elev-bg px-1.5 py-0.5 rounded mx-1" style={{ color: '#00FF88' }}>supabase/seed_demo_data.sql</code>
-              to re-seed with fresh 3-month demo data.
+              The brands table stays. After clearing, run the SQL migration files to re-seed.
             </p>
           </div>
         </div>
@@ -131,8 +147,8 @@ export function DemoDataPage() {
         </div>
         <ol className="text-xs space-y-1.5 ml-8 list-decimal" style={{ color: '#7EB8DA' }}>
           <li>Open <a className="underline" style={{ color: '#00D4FF' }} href="https://supabase.com/dashboard/project/_/sql" target="_blank" rel="noopener noreferrer">Supabase SQL Editor</a></li>
-          <li>Paste & run <code className="bg-elev-bg px-1.5 py-0.5 rounded" style={{ color: '#00FF88' }}>supabase/seed_demo_data.sql</code> — this truncates old data and inserts 30+ phones</li>
-          <li>Paste & run <code className="bg-elev-bg px-1.5 py-0.5 rounded" style={{ color: '#00FF88' }}>supabase/seed_demo_sales.sql</code> — this generates 3 months of sales, baki, cash book entries, and 12 online orders</li>
+          <li>Paste &amp; run <code className="bg-elev-bg px-1.5 py-0.5 rounded" style={{ color: '#00FF88' }}>supabase/seed_demo_data.sql</code> — this truncates old data and inserts 30+ phones</li>
+          <li>Paste &amp; run <code className="bg-elev-bg px-1.5 py-0.5 rounded" style={{ color: '#00FF88' }}>supabase/seed_demo_sales.sql</code> — this generates 3 months of sales, baki, cash book entries, and 12 online orders</li>
         </ol>
       </div>
     </div>
