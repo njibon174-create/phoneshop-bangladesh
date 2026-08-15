@@ -41,7 +41,7 @@ export function CartPage() {
         {/* Items */}
         <div className="space-y-3">
           {items.map((item) => (
-            <div key={item.slug} className="card p-4 flex gap-4">
+            <div key={item.id} className="card p-4 flex gap-4">
               <Link to={`/product/${item.slug}`} className="shrink-0 w-24 h-24 bg-elev-bg rounded-xl overflow-hidden">
                 <img src={item.image} alt={item.name} className="w-full h-full object-contain p-2" />
               </Link>
@@ -53,7 +53,7 @@ export function CartPage() {
                     <p className="text-xs text-sec-text line-clamp-1">{item.variant}</p>
                   </div>
                   <button
-                    onClick={() => remove(item.slug)}
+                    onClick={() => remove(item.id)}
                     className="text-muted-text hover:text-danger shrink-0 p-1"
                     aria-label="Remove"
                   >
@@ -63,7 +63,7 @@ export function CartPage() {
                 <div className="flex items-center justify-between mt-3">
                   <div className="flex items-center gap-1 bg-elev-bg border border-border rounded-lg">
                     <button
-                      onClick={() => setQuantity(item.slug, item.quantity - 1)}
+                      onClick={() => setQuantity(item.id, item.quantity - 1)}
                       className="w-8 h-8 flex items-center justify-center text-sec-text hover:text-neon-green"
                       aria-label="Decrease"
                     >
@@ -71,7 +71,7 @@ export function CartPage() {
                     </button>
                     <span className="w-8 text-center text-sm font-semibold text-main-text">{item.quantity}</span>
                     <button
-                      onClick={() => setQuantity(item.slug, item.quantity + 1)}
+                      onClick={() => setQuantity(item.id, item.quantity + 1)}
                       className="w-8 h-8 flex items-center justify-center text-sec-text hover:text-neon-green"
                       aria-label="Increase"
                     >

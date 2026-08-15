@@ -163,7 +163,7 @@ export async function createOrder({ customer, items, deliveryMethod = 'home' }) 
                      : Number.isFinite(cartPrice) && cartPrice > 0 ? cartPrice
                      : 0
     if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
-      throw new Error(`Invalid price for "${item.name}". Please contact support.`)
+      throw new Error(`Invalid price for "${item.name || item.slug || 'unknown'}". Please contact support.`)
     }
 
     if ((variant.stock_count || 0) <= 0) throw new Error(`${item.name} (${variant.variant_name}) is out of stock`)

@@ -4,60 +4,34 @@ export default {
   theme: {
     extend: {
       colors: {
-        // PhoneLedger palette
-        'neon-green': '#00FF88',
-        'neon-blue': '#00D4FF',
-        'dark-bg': '#0A0E1A',
-        'sec-bg': '#111827',
-        'card-bg': '#111827',
-        'elev-bg': '#1E2A3A',
-        'card-light': '#1E2A3A',
-      // ─── Legacy storefront aliases (original tokens) ───
-      'surface': '#111827',          // ≈ sec-bg
-      'surfaceElevated': '#1E2A3A',  // ≈ elev-bg
-      'text': '#F0F8FF',
-      'textMuted': '#a0a0b0',
-      'textSubtle': '#6c6c7c',
-      'borderHover': '#36363f',
-      'accent': '#00D4FF',           // was indigo, now matches neon-blue
-      'background': '#0A0E1A',
-        'border': '#1E3A5F',
-        'main-text': '#F0F8FF',
-        'sec-text': '#7EB8DA',
-        'muted-text': '#4A7A9B',
-        // Semantic aliases
-        'success': '#39FF88',
-        'danger': '#F87171',
-        'warning': '#FBBF24',
-        'info': '#60A5FA',
-      },
-      textColor: {
-        'success': '#39FF88',
-        'danger': '#F87171',
-        'warning': '#FBBF24',
-        'info': '#60A5FA',
-        'text': '#F0F8FF',
-        'textMuted': '#a0a0b0',
-        'textSubtle': '#6c6c7c',
-      },
-      backgroundColor: {
-        'success': '#39FF8820',
-        'danger': '#F8717120',
-        'warning': '#FBBF2420',
-        'info': '#60A5FA20',
-        'surface': '#111827',
-        'surfaceElevated': '#1E2A3A',
-        'background': '#0A0E1A',
-      },
-      borderColor: {
-        'success': '#39FF8850',
-        'danger': '#F8717150',
-        'warning': '#FBBF2450',
-        'info': '#60A5FA50',
+        // Apple-inspired White Minimal Palette
+        'brand-white': '#FFFFFF',
+        'brand-offwhite': '#F5F5F7',
+        'brand-grey': '#86868B',
+        'brand-dark': '#1D1D1F',
+        'brand-accent': '#0066CC', // Classic Apple Blue
+        
+        // Semantic Tokens
+        'bg-main': '#FFFFFF',
+        'bg-secondary': '#F5F5F7',
+        'text-main': '#1D1D1F',
+        'text-sec': '#86868B',
+        'text-muted': '#A1A1A6',
+        'border-main': '#D2D2D7',
+        'border-light': '#E5E5E7',
+        
+        'success': '#28CD41',
+        'danger': '#FF3B30',
+        'warning': '#FF9500',
+        'info': '#007AFF',
       },
       fontFamily: {
-        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
       },
+      boxShadow: {
+        'apple': '0 4px 20px rgba(0, 0, 0, 0.05)',
+        'apple-hover': '0 8px 30px rgba(0, 0, 0, 0.12)',
+      }
     },
   },
   plugins: [],

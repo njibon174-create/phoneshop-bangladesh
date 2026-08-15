@@ -1,349 +1,150 @@
-import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { PhoneCard } from '../components/ui/PhoneCard'
-import { fetchBrands, fetchProducts } from '../lib/queries'
-import { Sparkles, Zap, Shield, Truck, BadgeCheck, ChevronRight, ArrowRight, MessageCircle, Phone, MapPin } from 'lucide-react'
-
-function formatPrice(bdt) {
-  if (bdt == null) return '—'
-  return '৳' + Number(bdt).toLocaleString('en-IN')
-}
+import { ShoppingBag, Search, ArrowRight, Smartphone, Headset, Watch, Battery } from 'lucide-react'
+import { useCart } from '../lib/cart'
+import { fetchFeaturedProducts } from '../lib/queries'
+import { useEffect, useState } from 'react'
 
 export function Home() {
-  const [brands, setBrands] = useState([])
-  const [phones, setPhones] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { items, itemCount, add } = useCart()
+  const [featured, setFeatured] = useState([])
 
   useEffect(() => {
-    let cancelled = false
-    async function load() {
+    async function loadFeatured() {
       try {
-        const [brandsData, phonesData] = await Promise.all([
-          fetchBrands().catch(() => []),
-          fetchProducts({ limit: 8 }).catch(() => []),
-        ])
-        if (cancelled) return
-        if (brandsData?.length) setBrands(brandsData)
-        if (phonesData?.length) setPhones(phonesData)
+        const data = await fetchFeaturedProducts(4)
+        setFeatured(data)
       } catch (e) {
-        console.warn('Home data fetch failed:', e.message)
+        console.error('Failed to load featured products', e)
       }
-      if (!cancelled) setLoading(false)
     }
-    load()
-    return () => { cancelled = true }
+    loadFeatured()
   }, [])
 
   return (
-    <main className="overflow-hidden" style={{ backgroundColor: '#0A0E1A' }}>
-      {/* ─── HERO ─────────────────────────────────────────────── */}
-      <section
-        className="relative min-h-[85vh] flex items-center overflow-hidden"
-        style={{ backgroundColor: '#0A0E1A' }}
-      >
-        {/* Background grid + glow */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div
-            className="absolute inset-0"
-            style={{
-              background: 'radial-gradient(ellipse at 30% 20%, rgba(0,255,136,0.12), transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(0,212,255,0.1), transparent 50%)',
-            }}
-          />
-          <div
-            className="absolute inset-0 opacity-[0.03]"
-            style={{
-              backgroundImage: 'linear-gradient(rgba(0,255,136,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.5) 1px, transparent 1px)',
-              backgroundSize: '60px 60px',
-            }}
-          />
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full grid md:grid-cols-2 gap-12 items-center pt-12 md:pt-0">
-          <div>
-            <div
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-6"
-              style={{
-                backgroundColor: 'rgba(0, 255, 136, 0.1)',
-                border: '1px solid rgba(0, 255, 136, 0.3)',
-                color: '#00FF88',
-              }}
-            >
-              <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#00FF88' }} />
-              New Season Collection 2026
-            </div>
-            <h1
-              className="text-4xl sm:text-5xl lg:text-7xl font-black leading-[1.05] mb-6"
-              style={{ color: '#F0F8FF' }}
-            >
-              Bangladesh's<br />
-              <span style={{
-                background: 'linear-gradient(135deg, #00FF88, #00D4FF)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}>
-                Premium Phone
-              </span>
-              <br />
-              Destination
+    <div className="flex flex-col gap-24 pb-24">
+      {/* HERO SECTION */}
+      <section className="relative h-[90vh] flex items-center justify-center overflow-hidden bg-brand-offwhite">
+        <div className="section-container grid grid-cols-1 lg:grid-cols-2 gap-12 items-center z-10">
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+            className="max-w-2xl"
+          >
+            <span className="text-brand-accent font-bold tracking-widest uppercase text-sm mb-4 block">
+              Introducing the Future
+            </span>
+            <h1 className="text-6xl lg:text-8xl font-extrabold text-brand-dark leading-[1.1] mb-6 tracking-tight">
+              Innovation <br /> 
+              <span className="text-brand-grey">in every detail.</span>
             </h1>
-            <p className="text-lg sm:text-xl mb-8 max-w-xl" style={{ color: '#7EB8DA' }}>
-              From the latest iPhone to budget-friendly smartphones — authentic products, official warranty, and fast delivery across Bangladesh.
+            <p className="text-lg text-brand-grey mb-10 max-w-lg leading-relaxed">
+              Experience the next generation of mobile technology. Precision engineered, 
+              beautifully designed, and built for the way you live.
             </p>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                to="/brands"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-black"
-                style={{
-                  background: 'linear-gradient(135deg, #00FF88, #00D4FF)',
-                  boxShadow: '0 0 30px rgba(0, 255, 136, 0.35)',
-                }}
-              >
-                Shop All Phones
-                <ArrowRight className="w-5 h-5" />
+            <div className="flex items-center gap-4">
+              <Link to="/brands" className="btn-primary px-8 py-4 text-lg flex items-center gap-2 group">
+                Shop Now <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
-              <Link
-                to="/deals"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold"
-                style={{
-                  backgroundColor: '#1E2A3A',
-                  color: '#F0F8FF',
-                  border: '1px solid #1E3A5F',
-                }}
-              >
-                <Zap className="w-5 h-5" style={{ color: '#00FF88' }} />
-                See Deals
+              <Link to="/about" className="btn-secondary px-8 py-4 text-lg">
+                Learn More
               </Link>
             </div>
-
-            {/* Mini stats */}
-            <div className="grid grid-cols-3 gap-4 mt-10 max-w-md">
-              {[
-                { num: '10+', label: 'Top brands' },
-                { num: '5000+', label: 'Phones sold' },
-                { num: '4.9★', label: 'Customer rating' },
-              ].map((s, i) => (
-                <div key={i}>
-                  <p className="text-2xl font-bold" style={{ color: '#00FF88' }}>{s.num}</p>
-                  <p className="text-xs" style={{ color: '#7EB8DA' }}>{s.label}</p>
-                </div>
-              ))}
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, ease: 'easeOut' }}
+            className="relative hidden lg:block"
+          >
+            <div className="relative z-10 w-full aspect-[4/5] bg-white rounded-[3rem] shadow-apple flex items-center justify-center overflow-hidden border border-border-light">
+              <img 
+                src="https://images.unsplash.com/photo-1616348470796-27626bc7c223?auto=format&fit=crop&q=80&w=800" 
+                alt="Premium Phone" 
+                className="w-full h-full object-cover"
+              />
             </div>
-          </div>
-
-          {/* Hero device mockup */}
-          <div className="relative hidden md:flex items-center justify-center">
-            <div
-              className="absolute w-96 h-96 rounded-full blur-3xl"
-              style={{ background: 'linear-gradient(135deg, rgba(0,255,136,0.3), rgba(0,212,255,0.3))' }}
-            />
-            <div
-              className="relative w-72 h-[480px] rounded-[3rem] p-3"
-              style={{
-                background: 'linear-gradient(135deg, #1E2A3A, #111827)',
-                border: '2px solid #1E3A5F',
-                boxShadow: '0 30px 60px -10px rgba(0, 255, 136, 0.25)',
-              }}
-            >
-              <div
-                className="w-full h-full rounded-[2.5rem] overflow-hidden flex items-center justify-center"
-                style={{ backgroundColor: '#0A0E1A' }}
-              >
-                <div className="text-center p-6">
-                  <Phone className="w-16 h-16 mx-auto mb-4" style={{ color: '#00FF88' }} />
-                  <p className="text-2xl font-bold mb-2" style={{ color: '#F0F8FF' }}>iPhone 15 Pro</p>
-                  <p className="text-sm mb-4" style={{ color: '#7EB8DA' }}>Titanium. So strong. So light.</p>
-                  <p className="text-3xl font-black" style={{ color: '#00FF88' }}>৳1,99,999</p>
-                </div>
-              </div>
-            </div>
-          </div>
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-brand-accent/10 rounded-full blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-brand-accent/20 rounded-full blur-3xl" />
+          </motion.div>
         </div>
       </section>
 
-      {/* ─── TRUST STRIP ─────────────────────────────────────── */}
-      <section
-        className="border-y"
-        style={{ backgroundColor: '#111827', borderColor: '#1E3A5F' }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* CATEGORY HUB */}
+      <section className="section-container">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-brand-dark mb-4 tracking-tight">Shop by Category</h2>
+          <p className="text-brand-grey max-w-xl mx-auto">Find exactly what you need, from the latest flagship phones to essential accessories.</p>
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {[
-            { icon: Shield, label: 'Official Warranty', sub: 'All products' },
-            { icon: Zap, label: 'Fast Delivery', sub: 'All over BD' },
-            { icon: BadgeCheck, label: '100% Authentic', sub: 'Genuine products' },
-            { icon: MessageCircle, label: '24/7 Support', sub: 'WhatsApp & phone' },
-          ].map((t, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                style={{ backgroundColor: 'rgba(0, 255, 136, 0.1)' }}
-              >
-                <t.icon className="w-5 h-5" style={{ color: '#00FF88' }} />
-              </div>
-              <div>
-                <p className="text-sm font-semibold" style={{ color: '#F0F8FF' }}>{t.label}</p>
-                <p className="text-xs" style={{ color: '#7EB8DA' }}>{t.sub}</p>
-              </div>
-            </div>
+            { name: 'Smartphones', icon: Smartphone, path: '/brands', color: 'bg-blue-50 text-blue-600' },
+            { name: 'Audio', icon: Headset, path: '/deals', color: 'bg-purple-50 text-purple-600' },
+            { name: 'Wearables', icon: Watch, path: '/deals', color: 'bg-orange-50 text-orange-600' },
+            { name: 'Power', icon: Battery, path: '/deals', color: 'bg-green-50 text-green-600' },
+          ].map((cat) => (
+            <motion.div
+              key={cat.name}
+              whileHover={{ y: -8 }}
+              transition={{ type: 'spring', stiffness: 300 }}
+            >
+              <Link to={cat.path} className={`flex flex-col items-center justify-center p-10 rounded-3xl border border-border-light bg-white shadow-apple transition-all hover:shadow-apple-hover ${cat.color}`}>
+                <cat.icon className="w-12 h-12 mb-4" />
+                <span className="font-semibold text-brand-dark">{cat.name}</span>
+              </Link>
+            </motion.div>
           ))}
         </div>
       </section>
 
-      {/* ─── BRAND STRIP ─────────────────────────────────────── */}
-      <section className="py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between mb-8">
+      {/* FEATURED PRODUCTS */}
+      <section className="bg-brand-offwhite py-24">
+        <div className="section-container">
+          <div className="flex items-end justify-between mb-12">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: '#00FF88' }}>Authorized dealer</p>
-              <h2 className="text-2xl font-bold" style={{ color: '#F0F8FF' }}>Shop by Brand</h2>
+              <h2 className="text-4xl font-bold text-brand-dark tracking-tight mb-4">Featured Collection</h2>
+              <p className="text-brand-grey">Our top picks for this season.</p>
             </div>
-            <Link
-              to="/brands"
-              className="inline-flex items-center gap-1 text-sm font-medium"
-              style={{ color: '#7EB8DA' }}
-            >
-              All brands <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
-          {brands.length === 0 ? (
-            <p className="text-center py-4 text-sm" style={{ color: '#7EB8DA' }}>Loading brands…</p>
-          ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-10 gap-4">
-              {brands.map(b => (
-                <Link
-                  key={b.slug || b.name}
-                  to={`/brand/${b.slug || b.name.toLowerCase().replace(/ /g, '-')}`}
-                  className="group flex flex-col items-center justify-center p-4 rounded-2xl transition-all hover:-translate-y-1"
-                  style={{
-                    backgroundColor: '#111827',
-                    border: '1px solid #1E3A5F',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.borderColor = '#00FF88'
-                    e.currentTarget.style.backgroundColor = '#1E2A3A'
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = '#1E3A5F'
-                    e.currentTarget.style.backgroundColor = '#111827'
-                  }}
-                >
-                  {b.logo_url ? (
-                    <img src={b.logo_url} alt={b.name} className="h-10 w-auto max-w-full object-contain" />
-                  ) : (
-                    <span className="text-sm font-bold" style={{ color: '#F0F8FF' }}>{b.name}</span>
-                  )}
-                  <span className="text-[10px] mt-1 opacity-0 group-hover:opacity-100 transition" style={{ color: '#00FF88' }}>{b.name}</span>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* ─── FEATURED PHONES ────────────────────────────────── */}
-      <section
-        className="py-16"
-        style={{ backgroundColor: '#0A0E1A', borderTop: '1px solid #13161F', borderBottom: '1px solid #13161F' }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-end justify-between mb-8 gap-4 flex-wrap">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="w-4 h-4" style={{ color: '#00FF88' }} />
-                <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#00FF88' }}>Featured</p>
-              </div>
-              <h2 className="text-3xl font-bold" style={{ color: '#F0F8FF' }}>Trending Phones</h2>
-            </div>
-            <Link
-              to="/brands"
-              className="inline-flex items-center gap-1 text-sm font-medium"
-              style={{ color: '#7EB8DA' }}
-            >
-              View all <ChevronRight className="w-4 h-4" />
+            <Link to="/brands" className="text-brand-accent font-semibold hover:underline flex items-center gap-1">
+              View all <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 
-          {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="rounded-2xl p-4 animate-pulse" style={{ backgroundColor: '#111827', border: '1px solid #1E3A5F' }}>
-                  <div className="aspect-square rounded-xl mb-4" style={{ backgroundColor: '#1E2A3A' }} />
-                  <div className="h-3 w-1/3 rounded mb-2" style={{ backgroundColor: '#1E2A3A' }} />
-                  <div className="h-4 w-3/4 rounded mb-2" style={{ backgroundColor: '#1E2A3A' }} />
-                  <div className="h-2 w-full rounded mb-3" style={{ backgroundColor: '#1E2A3A' }} />
-                  <div className="h-5 w-1/2 rounded" style={{ backgroundColor: '#1E2A3A' }} />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {featured.length > 0 ? featured.map((product) => (
+              <motion.div 
+                key={product.id}
+                whileHover={{ y: -10 }}
+                className="card-apple group"
+              >
+                <div className="aspect-square bg-brand-offwhite rounded-2xl overflow-hidden mb-6 relative">
+                  <img 
+                    src={product.primary_image_url || 'https://via.placeholder.com/400'} 
+                    alt={product.name} 
+                    className="w-full h-full object-contain p-6 group-hover:scale-105 transition-transform duration-500" 
+                  />
+                  <button 
+                    onClick={() => add(product)}
+                    className="absolute bottom-4 right-4 p-3 bg-brand-dark text-white rounded-full opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 shadow-lg"
+                  >
+                    <ShoppingBag className="w-5 h-5" />
+                  </button>
                 </div>
-              ))}
-            </div>
-          ) : phones.length === 0 ? (
-            <div className="text-center py-16 rounded-2xl" style={{ backgroundColor: '#111827', border: '1px solid #1E3A5F' }}>
-              <p className="text-5xl mb-3">📱</p>
-              <p className="text-lg mb-1" style={{ color: '#F0F8FF' }}>No phones yet</p>
-              <p className="text-sm" style={{ color: '#7EB8DA' }}>Phones added from the admin will appear here.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {phones.map(p => (
-                <PhoneCard
-                  key={p.id}
-                  phone={{
-                    id: p.id,
-                    brand: p.brand_name,
-                    name: p.name,
-                    variant: p.variant,
-                    price: formatPrice(p.price_bdt ?? p.min_price_bdt),
-                    image: p.primary_image_url,
-                    slug: p.slug,
-                    inStock: p.in_stock,
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* ─── CTA STRIP ───────────────────────────────────────── */}
-      <section
-        className="py-16"
-        style={{
-          background: 'linear-gradient(135deg, rgba(0,255,136,0.08), rgba(0,212,255,0.08))',
-        }}
-      >
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4" style={{ color: '#F0F8FF' }}>
-            Visit our flagship store
-          </h2>
-          <p className="text-lg mb-6 max-w-2xl mx-auto" style={{ color: '#7EB8DA' }}>
-            See, feel, and try every phone in person. Get expert advice from our team in Gulshan, Dhaka.
-          </p>
-          <div className="flex items-center justify-center gap-4 flex-wrap">
-            <Link
-              to="/about"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold"
-              style={{
-                background: 'linear-gradient(135deg, #00FF88, #00D4FF)',
-                color: '#0A0E1A',
-                boxShadow: '0 0 20px rgba(0, 255, 136, 0.3)',
-              }}
-            >
-              <MapPin className="w-4 h-4" /> Visit Store
-            </Link>
-            <a
-              href="tel:+8801700000000"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold"
-              style={{
-                backgroundColor: '#1E2A3A',
-                color: '#F0F8FF',
-                border: '1px solid #1E3A5F',
-              }}
-            >
-              <Phone className="w-4 h-4" /> Call Us
-            </a>
+                <span className="text-[10px] uppercase tracking-widest text-brand-grey font-bold">{product.brand_name}</span>
+                <h3 className="text-lg font-bold text-brand-dark mb-2">{product.name}</h3>
+                <p className="text-brand-accent font-bold text-xl">৳{product.min_price_bdt?.toLocaleString()}</p>
+              </motion.div>
+            )) : (
+              <div className="col-span-full text-center py-20 text-brand-grey">
+                Loading the best of the best...
+              </div>
+            )}
           </div>
         </div>
       </section>
-    </main>
+    </div>
   )
 }
-
