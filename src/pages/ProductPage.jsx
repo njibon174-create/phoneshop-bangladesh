@@ -49,7 +49,14 @@ function ProductSkeleton() {
   return (
     <main className="bg-brand-white">
       <div className="section-container pt-6"><div className="h-4 w-64 bg-brand-offwhite rounded animate-pulse mb-6" /></div>
-      <div className="section-container pb-12">\n        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12 animate-pulse">\n          <div className="aspect-square bg-brand-offwhite rounded-3xl" />\n          <div className="space-y-4"><div className="h-6 w-24 bg-brand-offwhite rounded" /><div className="h-10 w-3/4 bg-brand-offwhite rounded" /><div className="h-8 w-32 bg-brand-offwhite rounded" /></div>\n        </div>\n      </div>\n    </main>\n  )
+      <div className="section-container pb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12 animate-pulse">
+          <div className="aspect-square bg-brand-offwhite rounded-3xl" />
+          <div className="space-y-4"><div className="h-6 w-24 bg-brand-offwhite rounded" /><div className="h-10 w-3/4 bg-brand-offwhite rounded" /><div className="h-8 w-32 bg-brand-offwhite rounded" /></div>
+        </div>
+      </div>
+    </main>
+  )
 }
 
 function ProductError({ message }) {
@@ -99,20 +106,81 @@ function VariantSelector({ variants = [], selectedVariant, onSelect }) {
               >
                 {v.color}
               </button>
-            ))}\n          </div>\n        </div>\n      )}
+            ))}
+          </div>
+        </div>
+      )}
 
       {rams.length > 1 && (
         <div>
-          <label className="block text-xs font-medium text-brand-grey mb-2 uppercase tracking-wide">\n            RAM{selected.ram_gb ? `: ${selected.ram_gb} GB` : ''}\n          </label>
-          <div className="flex flex-wrap gap-2">\n            {rams.map(v => {\n              const comboStock = variants.filter(x => x.color === selected.color && Number(x.ram_gb) === Number(v.ram_gb)).reduce((s, x) => s + (x.stock_count || 0), 0)\n              return (\n                <button\n                  key={v.ram_gb}\n                  onClick={() => {\n                    const match = getVariant(selected.color, v.ram_gb, selected.rom_gb) || getVariant(selected.color, v.ram_gb, roms[0]?.rom_gb) || v\n                    onSelect(match)\n                  }}\n                  className={`px-3 py-1.5 text-xs rounded-full border transition-all ${
-                    Number(selected.ram_gb) === Number(v.ram_gb)\n                      ? 'border-brand-accent bg-brand-accent/10 text-brand-accent font-semibold'\n                      : comboStock > 0\n                      ? 'border-border-light bg-white text-brand-grey hover:border-brand-accent'\n                      : 'border-border-light bg-brand-offwhite text-brand-grey opacity-40 cursor-not-allowed'\n                  }`}\n                  disabled={comboStock === 0}\n                >\n                  {v.ram_gb} GB{comboStock > 0 ? '' : ' · Out'}\n                </button>\n              )\n            })}\n          </div>\n        </div>\n      )}
+          <label className="block text-xs font-medium text-brand-grey mb-2 uppercase tracking-wide">
+            RAM{selected.ram_gb ? `: ${selected.ram_gb} GB` : ''}
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {rams.map(v => {
+              const comboStock = variants.filter(x => x.color === selected.color && Number(x.ram_gb) === Number(v.ram_gb)).reduce((s, x) => s + (x.stock_count || 0), 0)
+              return (
+                <button
+                  key={v.ram_gb}
+                  onClick={() => {
+                    const match = getVariant(selected.color, v.ram_gb, selected.rom_gb) || getVariant(selected.color, v.ram_gb, roms[0]?.rom_gb) || v
+                    onSelect(match)
+                  }}
+                  className={`px-3 py-1.5 text-xs rounded-full border transition-all ${
+                    Number(selected.ram_gb) === Number(v.ram_gb)
+                      ? 'border-brand-accent bg-brand-accent/10 text-brand-accent font-semibold'
+                      : comboStock > 0
+                      ? 'border-border-light bg-white text-brand-grey hover:border-brand-accent'
+                      : 'border-border-light bg-brand-offwhite text-brand-grey opacity-40 cursor-not-allowed'
+                  }`}
+                  disabled={comboStock === 0}
+                >
+                  {v.ram_gb} GB{comboStock > 0 ? '' : ' · Out'}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {roms.length > 1 && (
         <div>
-          <label className="block text-xs font-medium text-brand-grey mb-2 uppercase tracking-wide">\n            Storage{selected.rom_gb ? `: ${selected.rom_gb} GB` : ''}\n          </label>
-          <div className="flex flex-wrap gap-2">\n            {roms.map(v => {\n              const comboStock = variants.filter(x =>\n                x.color === selected.color &&\n                Number(x.ram_gb) === Number(selected.ram_gb) &&\n                Number(x.rom_gb) === Number(v.rom_gb)\n              ).reduce((s, x) => s + (x.stock_count || 0), 0)\n              return (\n                <button\n                  key={v.rom_gb}\n                  onClick={() => {\n                    const match = getVariant(selected.color, selected.ram_gb, v.rom_gb) || v\n                    onSelect(match)\n                  }}\n                  className={`px-3 py-1.5 text-xs rounded-full border transition-all ${
-                    Number(selected.rom_gb) === Number(v.rom_gb)\n                      ? 'border-brand-accent bg-brand-accent/10 text-brand-accent font-semibold'\n                      : comboStock > 0\n                      ? 'border-border-light bg-white text-brand-grey hover:border-brand-accent'\n                      : 'border-border-light bg-brand-offwhite text-brand-grey opacity-40 cursor-not-allowed'\n                  }`}\n                  disabled={comboStock === 0}\n                >\n                  {v.rom_gb} GB{comboStock > 0 ? '' : ' · Out'}\n                </button>\n              )\n            })}\n          </div>\n        </div>\n      )}
-    </div>\n  )\n}
+          <label className="block text-xs font-medium text-brand-grey mb-2 uppercase tracking-wide">
+            Storage{selected.rom_gb ? `: ${selected.rom_gb} GB` : ''}
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {roms.map(v => {
+              const comboStock = variants.filter(x =>
+                x.color === selected.color &&
+                Number(x.ram_gb) === Number(selected.ram_gb) &&
+                Number(x.rom_gb) === Number(v.rom_gb)
+              ).reduce((s, x) => s + (x.stock_count || 0), 0)
+              return (
+                <button
+                  key={v.rom_gb}
+                  onClick={() => {
+                    const match = getVariant(selected.color, selected.ram_gb, v.rom_gb) || v
+                    onSelect(match)
+                  }}
+                  className={`px-3 py-1.5 text-xs rounded-full border transition-all ${
+                    Number(selected.rom_gb) === Number(v.rom_gb)
+                      ? 'border-brand-accent bg-brand-accent/10 text-brand-accent font-semibold'
+                      : comboStock > 0
+                      ? 'border-border-light bg-white text-brand-grey hover:border-brand-accent'
+                      : 'border-border-light bg-brand-offwhite text-brand-grey opacity-40 cursor-not-allowed'
+                  }`}
+                  disabled={comboStock === 0}
+                >
+                  {v.rom_gb} GB{comboStock > 0 ? '' : ' · Out'}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 export function ProductPage() {
   const { slug } = useParams()
@@ -207,8 +275,216 @@ export function ProductPage() {
   return (
     <main className="bg-brand-white">
       <div className="section-container pt-6">
-        <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">\n          <nav className="flex items-center gap-1 text-sm text-brand-grey min-w-0 flex-1" aria-label="Breadcrumb">\n            <Link to="/" className="hover:text-brand-accent transition-colors">Home</Link>\n            <ChevronRight className="w-3 h-3" />\n            <Link to="/brands" className="hover:text-brand-accent transition-colors">Brands</Link>\n            <ChevronRight className="w-3 h-3" />\n            <Link to={`/brand/${product.brand_slug}`} className="hover:text-brand-accent transition-colors">{product.brand_name}</Link>\n            <ChevronRight className="w-3 h-3" />\n            <span className="text-brand-dark font-medium line-clamp-1">{product.name}</span>\n          </nav>\n          <BackButton />\n        </div>\n      </div>
+        <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+          <nav className="flex items-center gap-1 text-sm text-brand-grey min-w-0 flex-1" aria-label="Breadcrumb">
+            <Link to="/" className="hover:text-brand-accent transition-colors">Home</Link>
+            <ChevronRight className="w-3 h-3" />
+            <Link to="/brands" className="hover:text-brand-accent transition-colors">Brands</Link>
+            <ChevronRight className="w-3 h-3" />
+            <Link to={`/brand/${product.brand_slug}`} className="hover:text-brand-accent transition-colors">{product.brand_name}</Link>
+            <ChevronRight className="w-3 h-3" />
+            <span className="text-brand-dark font-medium line-clamp-1">{product.name}</span>
+          </nav>
+          <BackButton />
+        </div>
+      </div>
 
-      <div className="section-container pb-12">\n        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">\n          {/* Images */}\n          <div className="relative">\n            <motion.div \n              initial={{ opacity: 0, scale: 0.9 }}\n              animate={{ opacity: 1, scale: 1 }}\n              className="aspect-square bg-brand-offwhite border border-border-light rounded-3xl overflow-hidden mb-3 shadow-apple"\n            >\n              <img\n                src={images[activeImage]?.url || 'https://placehold.co/600x600/f5f5f7/86868b?text=No+Image'}\n                alt={images[activeImage]?.alt_text || product.name}\n                className="w-full h-full object-contain p-8"\n              />\n            </motion.div>\n            {images.length > 1 && (\n              <div className="flex gap-3 overflow-x-auto py-2">\n                {images.map((img, i) => (\n                  <button key={i} onClick={() => setActiveImage(i)}\n                    className={`shrink-0 w-20 h-20 rounded-xl border-2 overflow-hidden transition-all ${i === activeImage ? 'border-brand-accent scale-105 shadow-sm' : 'border-border-light hover:border-brand-grey'}`}>\n                    <img src={img.url} alt={img.alt_text || ''} className="w-full h-full object-contain p-2 bg-white" />\n                  </button>\n                ))}\n              </div>\n            )}\n          </div>
+      <div className="section-container pb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
+          {/* Images */}
+          <div className="relative">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="aspect-square bg-brand-offwhite border border-border-light rounded-3xl overflow-hidden mb-3 shadow-apple"
+            >
+              <img
+                src={images[activeImage]?.url || 'https://placehold.co/600x600/f5f5f7/86868b?text=No+Image'}
+                alt={images[activeImage]?.alt_text || product.name}
+                className="w-full h-full object-contain p-8"
+              />
+            </motion.div>
+            {images.length > 1 && (
+              <div className="flex gap-3 overflow-x-auto py-2">
+                {images.map((img, i) => (
+                  <button key={i} onClick={() => setActiveImage(i)}
+                    className={`shrink-0 w-20 h-20 rounded-xl border-2 overflow-hidden transition-all ${i === activeImage ? 'border-brand-accent scale-105 shadow-sm' : 'border-border-light hover:border-brand-grey'}`}>
+                    <img src={img.url} alt={img.alt_text || ''} className="w-full h-full object-contain p-2 bg-white" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-          {/* Product Info */}\n          <div className="flex flex-col">\n            <div className="flex items-center gap-2 mb-3">\n              <span className="bg-brand-accent/10 text-brand-accent text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider">{product.brand_name}</span>\n              <span className={`text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider ${stockBadge.cls}`}>{stockBadge.text}</span>\n            </div>\n            <h1 className="text-4xl font-extrabold text-brand-dark mb-2 tracking-tight">\n              {product.brand_name} {product.name}\n            </h1>\n\n            {variants.length > 0 && (\n              <div className="mb-8">\n                <VariantSelector\n                  variants={variants}\n                  selectedVariant={selectedVariant}\n                  onSelect={setSelectedVariant}\n                />\n              </div>\n            )}\n\n            <div className="flex items-baseline gap-3 mb-2">\n              <span className="text-5xl font-bold text-brand-dark">{formatPrice(price)}</span>\n              {comparePrice && comparePrice > price && (\n                <span className="text-xl text-brand-grey line-through">{formatPrice(comparePrice)}</span>\n              )}\n            </div>\n            <p className="text-sm text-brand-grey mb-8">Inclusive of all taxes • Official warranty included</p>\n\n            {product.short_desc && (\n              <p className="text-brand-grey text-lg mb-8 leading-relaxed">{product.short_desc}</p>\n            )}\n\n            <div className="flex flex-col sm:flex-row gap-4 mb-10">\n              {!isOutOfStock ? (\n                <>\n                  <button onClick={addToCart} className="btn-primary py-4 px-8 flex items-center justify-center gap-3 text-lg">\n                    <ShoppingCart className="w-5 h-5" /> Add to Cart\n                  </button>\n                  <button onClick={addToCart} className="btn-secondary py-4 px-8 flex items-center justify-center gap-3 text-lg">\n                    <CheckCircle2 className="w-5 h-5" /> Buy Now\n                  </button>\n                </>\n              ) : (\n                <button\n                  onClick={() => setRestockOpen(true)}\n                  className="btn-primary py-4 px-8 flex items-center justify-center gap-3 text-lg w-full sm:w-auto"\n                >\n                  <Bell className="w-5 h-5" /> Notify Me When In Stock\n                </button>\n              )}\n              <button\n                onClick={() => toggleWish({\n                  id: product.id,\n                  slug: product.slug,\n                  variant_id: selectedVariant?.id,\n                  name: `${product.brand_name} ${product.name}`,\n                  variant: selectedVariant?.variant_name,\n                  brand: product.brand_name,\n                  image: selectedVariant?.image_url || product.primary_image_url,\n                  unit_price_bdt: selectedVariant?.mrp_bdt,\n                  price_bdt: price,\n                })}\n                className={`btn-secondary py-4 px-8 flex items-center justify-center gap-3 text-lg transition-all ${inWishlist(selectedVariant?.id || product.id) ? 'bg-danger/10 text-danger border-danger' : ''}`}\n              >\n                <Heart className={`w-5 h-5 ${inWishlist(selectedVariant?.id || product.id) ? 'fill-current' : ''}`} />\n                <span>{inWishlist(selectedVariant?.id || product.id) ? 'In Wishlist' : 'Wishlist'}</span>\n              </button>\n              <button onClick={share} className="btn-secondary py-4 px-8 flex items-center justify-center gap-3 text-lg">\n                {copied ? <Check className="w-5 h-5 text-success" /> : <Share2 className="w-5 h-5" />}\n                <span>{copied ? 'Copied!' : 'Share'}</span>\n              </button>\n            </div>\n\n            <div className="grid grid-cols-3 gap-4 p-6 bg-brand-offwhite rounded-3xl border border-border-light">\n              <div className="flex flex-col items-center text-center">\n                <Truck className="w-6 h-6 text-brand-accent mb-2" />\n                <p className="text-xs font-bold text-brand-dark">Fast Delivery</p>\n                <p className="text-[10px] text-brand-grey">2-5 Working Days</p>\n              </div>\n              <div className="flex flex-col items-center text-center">\n                <Shield className="w-6 h-6 text-brand-accent mb-2" />\n                <p className="text-xs font-bold text-brand-dark">{product.warranty_months || 12}mo Warranty</p>\n                <p className="text-[10px] text-brand-grey">Official Support</p>\n              </div>\n              <div className="flex flex-col items-center text-center">\n                <RotateCcw className="w-6 h-6 text-brand-accent mb-2" />\n                <p className="text-xs font-bold text-brand-dark">Easy Returns</p>\n                <p className="text-[10px] text-brand-grey">7-Day Policy</p>\n              </div>\n            </div>\n          </div>\n        </div>\n\n        {specGroups.length > 0 && (\n          <section className="mb-16">\n            <h2 className="text-3xl font-bold text-brand-dark mb-8 tracking-tight">Technical Specifications</h2>\n            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">\n              {specGroups.map(g => (\n                <div key={g.title} className="bg-white border border-border-light rounded-3xl p-6 shadow-sm">\n                  <div className="flex items-center gap-3 mb-6">\n                    <div className="w-10 h-10 bg-brand-offwhite rounded-xl flex items-center justify-center">\n                      <g.icon className="w-5 h-5 text-brand-accent" />\n                    </div>\n                    <h3 className="font-bold text-brand-dark">{g.title}</h3>\n                  </div>\n                  <dl className="grid grid-cols-1 gap-3">\n                    {g.rows.map(r => (\n                      <div key={r.key} className="flex justify-between items-center py-2 border-b border-border-light last:border-0">\n                        <dt className="text-brand-grey text-sm">{r.label}</dt>\n                        <dd className="text-brand-dark font-medium text-sm text-right">{r.value}</dd>\n                      </div>\n                    ))}\n                  </dl>\n                </div>\n              ))}\n            </div>\n          </section>\n        )}\n\n        {product.long_desc && (\n          <section className="mb-16">\n            <h2 className="text-3xl font-bold text-brand-dark mb-6 tracking-tight">About this product</h2>\n            <div className="bg-brand-offwhite rounded-3xl p-8 border border-border-light">\n              <p className="text-brand-grey text-lg leading-relaxed whitespace-pre-line">{product.long_desc}</p>\n            </div>\n          </section>\n        )}\n\n        {related.length > 0 && (\n          <section>\n            <div className="flex items-end justify-between mb-8 gap-3 flex-wrap">\n              <h2 className="text-3xl font-bold text-brand-dark tracking-tight">You might also like</h2>\n              <Link to={`/brand/${product.brand_slug}`} className="text-sm text-brand-accent font-semibold hover:underline flex items-center gap-1">\n                See all {product.brand_name} <ChevronRight className="w-4 h-4" />\n              </Link>\n            </div>\n            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">\n              {related.map(p => (\n                <PhoneCard\n                  key={p.id}\n                  phone={{\n                    id: p.id,\n                    brand: p.brand_name,\n                    name: p.name,\n                    variant: p.variant_name,\n                    price: formatPrice(p.min_price_bdt),\n                    image: p.primary_image_url,\n                    slug: p.slug,\n                  }}\n                />\n              ))}\n            </div>\n          </section>\n        )}\n      </div>\n\n      {restockOpen && (\n        <RestockRequestModal\n          phone={{\n            id: product.id,\n            slug: product.slug,\n            variant_id: selectedVariant?.id,\n            name: `${product.brand_name} ${product.name}`,\n            variant: selectedVariant?.variant_name,\n            brand: product.brand_name,\n          }}\n          onClose={() => setRestockOpen(false)}\n        />\n      )}\n    </main>\n  )\n}
+          {/* Product Info */}
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="bg-brand-accent/10 text-brand-accent text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider">{product.brand_name}</span>
+              <span className={`text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider ${stockBadge.cls}`}>{stockBadge.text}</span>
+            </div>
+            <h1 className="text-4xl font-extrabold text-brand-dark mb-2 tracking-tight">
+              {product.brand_name} {product.name}
+            </h1>
+
+            {variants.length > 0 && (
+              <div className="mb-8">
+                <VariantSelector
+                  variants={variants}
+                  selectedVariant={selectedVariant}
+                  onSelect={setSelectedVariant}
+                />
+              </div>
+            )}
+
+            <div className="flex items-baseline gap-3 mb-2">
+              <span className="text-5xl font-bold text-brand-dark">{formatPrice(price)}</span>
+              {comparePrice && comparePrice > price && (
+                <span className="text-xl text-brand-grey line-through">{formatPrice(comparePrice)}</span>
+              )}
+            </div>
+            <p className="text-sm text-brand-grey mb-8">Inclusive of all taxes • Official warranty included</p>
+
+            {product.short_desc && (
+              <p className="text-brand-grey text-lg mb-8 leading-relaxed">{product.short_desc}</p>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-4 mb-10">
+              {!isOutOfStock ? (
+                <>
+                  <button onClick={addToCart} className="btn-primary py-4 px-8 flex items-center justify-center gap-3 text-lg">
+                    <ShoppingCart className="w-5 h-5" /> Add to Cart
+                  </button>
+                  <button onClick={addToCart} className="btn-secondary py-4 px-8 flex items-center justify-center gap-3 text-lg">
+                    <CheckCircle2 className="w-5 h-5" /> Buy Now
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setRestockOpen(true)}
+                  className="btn-primary py-4 px-8 flex items-center justify-center gap-3 text-lg w-full sm:w-auto"
+                >
+                  <Bell className="w-5 h-5" /> Notify Me When In Stock
+                </button>
+              )}
+              <button
+                onClick={() => toggleWish({
+                  id: product.id,
+                  slug: product.slug,
+                  variant_id: selectedVariant?.id,
+                  name: `${product.brand_name} ${product.name}`,
+                  variant: selectedVariant?.variant_name,
+                  brand: product.brand_name,
+                  image: selectedVariant?.image_url || product.primary_image_url,
+                  unit_price_bdt: selectedVariant?.mrp_bdt,
+                  price_bdt: price,
+                })}
+                className={`btn-secondary py-4 px-8 flex items-center justify-center gap-3 text-lg transition-all ${inWishlist(selectedVariant?.id || product.id) ? 'bg-danger/10 text-danger border-danger' : ''}`}
+              >
+                <Heart className={`w-5 h-5 ${inWishlist(selectedVariant?.id || product.id) ? 'fill-current' : ''}`} />
+                <span>{inWishlist(selectedVariant?.id || product.id) ? 'In Wishlist' : 'Wishlist'}</span>
+              </button>
+              <button onClick={share} className="btn-secondary py-4 px-8 flex items-center justify-center gap-3 text-lg">
+                {copied ? <Check className="w-5 h-5 text-success" /> : <Share2 className="w-5 h-5" />}
+                <span>{copied ? 'Copied!' : 'Share'}</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 p-6 bg-brand-offwhite rounded-3xl border border-border-light">
+              <div className="flex flex-col items-center text-center">
+                <Truck className="w-6 h-6 text-brand-accent mb-2" />
+                <p className="text-xs font-bold text-brand-dark">Fast Delivery</p>
+                <p className="text-[10px] text-brand-grey">2-5 Working Days</p>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <Shield className="w-6 h-6 text-brand-accent mb-2" />
+                <p className="text-xs font-bold text-brand-dark">{product.warranty_months || 12}mo Warranty</p>
+                <p className="text-[10px] text-brand-grey">Official Support</p>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <RotateCcw className="w-6 h-6 text-brand-accent mb-2" />
+                <p className="text-xs font-bold text-brand-dark">Easy Returns</p>
+                <p className="text-[10px] text-brand-grey">7-Day Policy</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {specGroups.length > 0 && (
+          <section className="mb-16">
+            <h2 className="text-3xl font-bold text-brand-dark mb-8 tracking-tight">Technical Specifications</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {specGroups.map(g => (
+                <div key={g.title} className="bg-white border border-border-light rounded-3xl p-6 shadow-sm">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-brand-offwhite rounded-xl flex items-center justify-center">
+                      <g.icon className="w-5 h-5 text-brand-accent" />
+                    </div>
+                    <h3 className="font-bold text-brand-dark">{g.title}</h3>
+                  </div>
+                  <dl className="grid grid-cols-1 gap-3">
+                    {g.rows.map(r => (
+                      <div key={r.key} className="flex justify-between items-center py-2 border-b border-border-light last:border-0">
+                        <dt className="text-brand-grey text-sm">{r.label}</dt>
+                        <dd className="text-brand-dark font-medium text-sm text-right">{r.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {product.long_desc && (
+          <section className="mb-16">
+            <h2 className="text-3xl font-bold text-brand-dark mb-6 tracking-tight">About this product</h2>
+            <div className="bg-brand-offwhite rounded-3xl p-8 border border-border-light">
+              <p className="text-brand-grey text-lg leading-relaxed whitespace-pre-line">{product.long_desc}</p>
+            </div>
+          </section>
+        )}
+
+        {related.length > 0 && (
+          <section>
+            <div className="flex items-end justify-between mb-8 gap-3 flex-wrap">
+              <h2 className="text-3xl font-bold text-brand-dark tracking-tight">You might also like</h2>
+              <Link to={`/brand/${product.brand_slug}`} className="text-sm text-brand-accent font-semibold hover:underline flex items-center gap-1">
+                See all {product.brand_name} <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {related.map(p => (
+                <PhoneCard
+                  key={p.id}
+                  phone={{
+                    id: p.id,
+                    brand: p.brand_name,
+                    name: p.name,
+                    variant: p.variant_name,
+                    price: formatPrice(p.min_price_bdt),
+                    image: p.primary_image_url,
+                    slug: p.slug,
+                  }}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+
+      {restockOpen && (
+        <RestockRequestModal
+          phone={{
+            id: product.id,
+            slug: product.slug,
+            variant_id: selectedVariant?.id,
+            name: `${product.brand_name} ${product.name}`,
+            variant: selectedVariant?.variant_name,
+            brand: product.brand_name,
+          }}
+          onClose={() => setRestockOpen(false)}
+        />
+      )}
+    </main>
+  )
+}
